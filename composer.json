@@ -1,0 +1,27 @@
+{
+    "name": "flc1125/laravel-elasticsearch",
+    "description": "Laravel Elasticsearch",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Flc",
+            "email": "i@flc.io"
+        }
+    ],
+    "require": {
+        "elasticsearch/elasticsearch": "~6.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Flc\\Laravel\\Elasticsearch\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Flc\\Laravel\\Elasticsearch\\FilesystemServiceProvider"
+            ]
+        }
+    }
+}
