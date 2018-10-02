@@ -92,7 +92,7 @@ class ElasticsearchManager
      * 通过配置返回客户端连接实例
      *
      * @param  array $config
-     * @return ElasticsearchClient
+     * @return ElasticsearchConnection
      */
     protected function makeConnection($config)
     {
