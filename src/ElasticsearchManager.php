@@ -3,6 +3,7 @@
 namespace Flc\Laravel\Elasticsearch;
 
 use InvalidArgumentException;
+use Elasticsearch\ClientBuilder;
 
 /**
  * Elasticsearch Manager
@@ -67,7 +68,7 @@ class ElasticsearchManager
     {
         $config = $this->getConfig($name);
 
-        return $this->getElasticsearchClient($config);
+        return $this->makeConnection($config);
     }
 
     /**
@@ -88,14 +89,18 @@ class ElasticsearchManager
     }
 
     /**
-     * 通过配置返回 Elasticsearch 客户端实例
+     * 通过配置返回客户端连接实例
      *
      * @param  array $config
      * @return ElasticsearchClient
      */
-    protected function getElasticsearchClient($config)
+    protected function makeConnection($config)
     {
-        return (new ElasticsearchClient($config['host']))->build();
+        return new ElasticsearchConnection(
+            ClientBuilder::create()
+                ->setHosts($config['host'])
+                ->build()
+        );
     }
 
     /**
