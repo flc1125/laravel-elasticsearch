@@ -97,4 +97,16 @@ class ElasticsearchManager
     {
         return (new ElasticsearchClient($config['host']))->build();
     }
+
+    /**
+     * Dynamically pass methods to the default connection.
+     *
+     * @param  string  $method
+     * @param  array   $parameters
+     * @return mixed
+     */
+    public function __call($method, $parameters)
+    {
+        return $this->connection()->$method(...$parameters);
+    }
 }
