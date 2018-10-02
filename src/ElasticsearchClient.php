@@ -5,25 +5,29 @@ namespace Flc\Laravel\Elasticsearch;
 use Elasticsearch\ClientBuilder;
 
 /**
-* 123
-*/
+ * Elasticsearch 官方客户端
+ *
+ * @author Flc <i@flc.io>
+ * @link   http://flc.io
+ * @see    https://www.elastic.co/guide/en/elasticsearch/client/php-api/6.0/index.html
+ */
 class ElasticsearchClient
 {
     /**
      * config
      *
-     * @var array
+     * @var mixed
      */
-    protected $config = [];
+    protected $host;
     
     /**
      * 创建一个客户端连接
      *
-     * @param array $config
+     * @param mixed $host
      */
-    public function __construct($config = [])
+    public function __construct($host)
     {
-        $this->config = $config;
+        $this->host = $host;
     }
     
     /**
@@ -33,6 +37,8 @@ class ElasticsearchClient
      */
     public function build()
     {
-        return ClientBuilder::create($this->config)->build();
+        return ClientBuilder::create()
+            ->setHosts($this->host)
+            ->build();
     }
 }
