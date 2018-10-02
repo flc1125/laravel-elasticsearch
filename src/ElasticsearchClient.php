@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace Flc\Laravel\Elasticsearch;
 
@@ -19,7 +19,7 @@ class ElasticsearchClient
      * @var mixed
      */
     protected $host;
-    
+
     /**
      * 创建一个客户端连接
      *
@@ -29,7 +29,7 @@ class ElasticsearchClient
     {
         $this->host = $host;
     }
-    
+
     /**
      * 创建客户端
      *

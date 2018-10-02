@@ -1,7 +1,9 @@
-<?php 
+<?php
 
 /**
  * Elasticsearch 配置文件
+ *
+ * @author Flc <i@flc.io>
  */
 return [
     // 默认连接名
@@ -9,6 +11,8 @@ return [
 
     // 所有连接
     'connections' => [
-        'default' => ['192.168.0.211:9200'],
+        'default' => [
+            'host' => ['172.17.0.4:9200'],
+        ],
     ],
 ];
