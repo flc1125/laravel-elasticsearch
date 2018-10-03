@@ -2,8 +2,8 @@
 
 namespace Flc\Laravel\Elasticsearch;
 
-use InvalidArgumentException;
 use Elasticsearch\ClientBuilder;
+use InvalidArgumentException;
 
 /**
  * Elasticsearch Manager
@@ -29,8 +29,7 @@ class ElasticsearchManager
     /**
      * 创建新的 Elasticsearch 实例
      *
-     * @param  \Illuminate\Foundation\Application  $app
-     * @return void
+     * @param \Illuminate\Foundation\Application $app
      */
     public function __construct($app)
     {
@@ -61,7 +60,8 @@ class ElasticsearchManager
     /**
      * 通过别名生成连接实例
      *
-     * @param  string $name
+     * @param string $name
+     *
      * @return ElastisearchClient
      */
     protected function resolve($name)
@@ -74,7 +74,8 @@ class ElasticsearchManager
     /**
      * 获取配置
      *
-     * @param  string $name 配置别名
+     * @param string $name 配置别名
+     *
      * @return array
      */
     protected function getConfig($name)
@@ -91,7 +92,8 @@ class ElasticsearchManager
     /**
      * 通过配置返回客户端连接实例
      *
-     * @param  array $config
+     * @param array $config
+     *
      * @return ElasticsearchConnection
      */
     protected function makeConnection($config)
@@ -106,8 +108,9 @@ class ElasticsearchManager
     /**
      * Dynamically pass methods to the default connection.
      *
-     * @param  string  $method
-     * @param  array   $parameters
+     * @param string $method
+     * @param array  $parameters
+     *
      * @return mixed
      */
     public function __call($method, $parameters)

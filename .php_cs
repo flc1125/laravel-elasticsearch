@@ -18,8 +18,8 @@ return PhpCsFixer\Config::create()
         'general_phpdoc_annotation_remove' => true,
         // 'ordered_class_elements' => true,
         'binary_operator_spaces' => array(
-            'align_double_arrow' => true,
-            'align_equals' => true,
+            // 'align_double_arrow' => true,
+            // 'align_equals' => true,
             'default' => 'align_single_space_minimal',
         ),
     ))

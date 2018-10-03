@@ -13,7 +13,7 @@ use Flc\Laravel\Elasticsearch\Query\Builder;
 class ElasticsearchConnection
 {
     /**
-     * @var ElasticsearchClient $client
+     * @var ElasticsearchClient
      */
     protected $client;
 
@@ -30,7 +30,8 @@ class ElasticsearchConnection
     /**
      * 指定索引或索引数据
      *
-     * @param  string|array $value
+     * @param string|array $value
+     *
      * @return \Flc\Laravel\Elasticsearch\Query\Builder|array
      */
     public function index($value)
@@ -57,8 +58,9 @@ class ElasticsearchConnection
     /**
      * Dynamically pass methods to the default connection.
      *
-     * @param  string  $method
-     * @param  array   $parameters
+     * @param string $method
+     * @param array  $parameters
+     *
      * @return mixed
      */
     public function __call($method, $parameters)

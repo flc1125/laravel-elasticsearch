@@ -15,12 +15,10 @@ class ElasticsearchServiceProvider extends ServiceProvider
 {
     /**
      * Boot the service provider.
-     *
-     * @return void
      */
     public function boot()
     {
-        $source = realpath($raw = __DIR__ . '/../config/elasticsearch.php') ?: $raw;
+        $source = realpath($raw = __DIR__.'/../config/elasticsearch.php') ?: $raw;
 
         if ($this->app instanceof LaravelApplication && $this->app->runningInConsole()) {
             $this->publishes([$source => config_path('elasticsearch.php')]);
@@ -33,8 +31,6 @@ class ElasticsearchServiceProvider extends ServiceProvider
 
     /**
      * Register the service provider.
-     *
-     * @return void
      */
     public function register()
     {
