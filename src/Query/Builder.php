@@ -55,9 +55,9 @@ class Builder
     /**
      * 实例化一个构建链接
      *
-     * @param ElasticsearchClient $client [description]
+     * @param ElasticsearchClient $client
      */
-    function __construct(ElasticsearchClient $client)
+    public function __construct(ElasticsearchClient $client)
     {
         $this->client = $client;
     }
@@ -65,7 +65,8 @@ class Builder
     /**
      * 指定索引名
      *
-     * @param  string $value
+     * @param string $value
+     *
      * @return $this
      */
     public function index($value)
@@ -78,7 +79,8 @@ class Builder
     /**
      * 指定type
      *
-     * @param  string $value
+     * @param string $value
+     *
      * @return $this
      */
     public function type($value)
@@ -91,7 +93,8 @@ class Builder
     /**
      * 指定需要查询获取的字段
      *
-     * @param  array|mixed  $columns
+     * @param array|mixed $columns
+     *
      * @return $this
      */
     public function select($columns = ['*'])
@@ -149,11 +152,11 @@ class Builder
             'from'  => 0,
             'size'  => 20,
             'body'  => [
-                'query'   => [
+                'query' => [
                     'bool' => $this->wheres,
                 ],
                 // '_source' => ['*'],
-                'sort'    => $this->orders,
+                'sort' => $this->orders,
             ],
         ];
 
@@ -161,12 +164,6 @@ class Builder
             $params['type'] = $this->type;
         }
     }
-
-
-
-
-
-
 
     public function info()
     {

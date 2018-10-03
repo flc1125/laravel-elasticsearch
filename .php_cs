@@ -25,11 +25,7 @@ return PhpCsFixer\Config::create()
     ))
     ->setFinder(
         PhpCsFixer\Finder::create()
-            ->exclude('_*')
             ->exclude('vendor')
-            ->exclude('storage')
-            ->exclude('resources')
-            ->exclude('public')
             ->in(__DIR__)
     )
 ;
