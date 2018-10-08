@@ -37,7 +37,7 @@ class ElasticsearchManager
     }
 
     /**
-     * 获取一个单例链接
+     * 获取一个单例连接
      *
      * @param string $name
      *
