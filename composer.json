@@ -1,5 +1,5 @@
 {
-    "name": "flc1125/laravel-elasticsearch",
+    "name": "flc/laravel-elasticsearch",
     "description": "Laravel Elasticsearch",
     "type": "library",
     "license": "MIT",
