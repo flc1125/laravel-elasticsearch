@@ -37,21 +37,44 @@ class Builder
     protected $type = 'doc';
 
     /**
-     * 需要查询的字段
-     *
-     * @var array
-     */
-    protected $columns;
-
-    /**
      * 搜寻条件
      *
      * @var array
      */
-    public $wheres = [
+    protected $wheres = [
         'must'     => [],
         'must_not' => [],
     ];
+
+    /**
+     * 排序
+     *
+     * @var array
+     */
+    protected $sorts = [];
+
+    /**
+     * 从X条开始查询
+     *
+     * @var int
+     */
+    protected $from;
+
+    /**
+     * 获取数量
+     *
+     * @var int
+     */
+    protected $size;
+
+    // protected $aggs = [];
+
+    /**
+     * 需要查询的字段
+     *
+     * @var array
+     */
+    // protected $columns;
 
     /**
      * 实例化一个构建链接
@@ -89,6 +112,94 @@ class Builder
         $this->type = $value;
 
         return $this;
+    }
+
+    /**
+     * 按自定字段排序
+     *
+     * @param string $column
+     * @param string $direction
+     *
+     * @return $this
+     */
+    public function orderBy($column, $direction = 'asc')
+    {
+        $this->sorts[] = [
+            $column => [
+                'order' => strtolower($direction) == 'asc' ? 'asc' : 'desc',
+            ],
+        ];
+
+        return $this;
+    }
+
+    /**
+     * offset 方法别名
+     *
+     * @param int $value
+     *
+     * @return $this
+     */
+    public function skip($value)
+    {
+        return $this->offset($value);
+    }
+
+    /**
+     * 跳过X条数据
+     *
+     * @param int $value
+     *
+     * @return $this
+     */
+    public function offset($value)
+    {
+        if ($value >= 0) {
+            $this->from = $value;
+        }
+
+        return $this;
+    }
+
+    /**
+     * limit 方法别名
+     *
+     * @param int $value
+     *
+     * @return $this
+     */
+    public function take($value)
+    {
+        return $this->limit($value);
+    }
+
+    /**
+     * 设置获取的数据量
+     *
+     * @param int $value
+     *
+     * @return $this
+     */
+    public function limit($value)
+    {
+        if ($value >= 0) {
+            $this->size = $value;
+        }
+
+        return $this;
+    }
+
+    /**
+     * 以分页形式获取指定数量数据
+     *
+     * @param int $page
+     * @param int $perPage
+     *
+     * @return $this
+     */
+    public function forPage($page, $perPage = 15)
+    {
+        return $this->skip(($page - 1) * $perPage)->take($perPage);
     }
 
     /**
@@ -161,32 +272,49 @@ class Builder
      *
      * @return Collection
      */
-    // public function get()
-    // {
-    //     return collect($this->runSearch());
-    // }
+    public function get()
+    {
+        return collect($this->runSearch());
+    }
 
     /*
      * 执行搜寻
      *
      * @return array
      */
-    // protected function runSearch()
-    // {
-    //     $params = [
-    //         'index' => $this->index,
-    //         'type'  => $this->type,
-    //         'from'  => 0,
-    //         'size'  => 20,
-    //         'body'  => [
-    //             'query' => [
-    //                 'bool' => $this->wheres,
-    //             ],
-    //             // '_source' => ['*'],
-    //             'sort' => $this->orders,
-    //         ],
-    //     ];
+    protected function runSearch()
+    {
+        $params = [
+            'index' => $this->index,
+            'type'  => $this->type,
+            'from'  => 0,
+            'size'  => 20,
+            'body'  => [
+                'query' => [
+                    'bool' => $this->wheres,
+                ],
+                // '_source' => ['*'],
+                // 'sort' => $this->orders,
+            ],
+        ];
 
-    //     return $this->client->search($params);
-    // }
+        return $this->client->search(
+            $this->toQuery()
+        );
+    }
+
+    /**
+     * 返回请求参数
+     *
+     * @return array
+     */
+    public function toQuery()
+    {
+        $query = [
+            'index' => $this->index,
+            'body'  => [],
+            'from'  => $this->from,
+            'size'  => $this->size,
+        ];
+    }
 }
