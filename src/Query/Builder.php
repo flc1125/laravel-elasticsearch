@@ -58,14 +58,14 @@ class Builder
      *
      * @var int
      */
-    protected $from;
+    protected $from = null;
 
     /**
      * 获取数量
      *
      * @var int
      */
-    protected $size;
+    protected $size = null;
 
     // protected $aggs = [];
 
@@ -74,7 +74,7 @@ class Builder
      *
      * @var array
      */
-    // protected $columns;
+    protected $_source = null;
 
     /**
      * 实例化一个构建链接
@@ -110,6 +110,20 @@ class Builder
     public function type($value)
     {
         $this->type = $value;
+
+        return $this;
+    }
+
+    /**
+     * 指定需要查询获取的字段
+     *
+     * @param array|mixed $columns
+     *
+     * @return $this
+     */
+    public function select($columns = ['*'])
+    {
+        $this->_source = is_array($columns) ? $columns : func_get_args();
 
         return $this;
     }
@@ -202,19 +216,7 @@ class Builder
         return $this->skip(($page - 1) * $perPage)->take($perPage);
     }
 
-    /**
-     * 指定需要查询获取的字段
-     *
-     * @param array|mixed $columns
-     *
-     * @return $this
-     */
-    public function select($columns = ['*'])
-    {
-        $this->columns = is_array($columns) ? $columns : func_get_args();
-
-        return $this;
-    }
+    // =======================================================
 
     /**
      * 通过文档 ID 查询数据
@@ -274,37 +276,39 @@ class Builder
      */
     public function get()
     {
-        return collect($this->runSearch());
+        return $this->processSearch(
+            $this->runSearch()
+        );
+    }
+
+    /**
+     * 处理搜索数据结果
+     *
+     * @param array $result
+     *
+     * @return Collection
+     */
+    protected function processSearch($result)
+    {
+        return collect($result['hits']['hits'])->map(function ($item) {
+            return collect($item['_source']);
+        });
     }
 
     /*
-     * 执行搜寻
+     * 执行搜索
      *
      * @return array
      */
     protected function runSearch()
     {
-        $params = [
-            'index' => $this->index,
-            'type'  => $this->type,
-            'from'  => 0,
-            'size'  => 20,
-            'body'  => [
-                'query' => [
-                    'bool' => $this->wheres,
-                ],
-                // '_source' => ['*'],
-                // 'sort' => $this->orders,
-            ],
-        ];
-
         return $this->client->search(
             $this->toQuery()
         );
     }
 
     /**
-     * 返回请求参数
+     * 转换为请求参数
      *
      * @return array
      */
@@ -312,9 +316,33 @@ class Builder
     {
         $query = [
             'index' => $this->index,
-            'body'  => [],
-            'from'  => $this->from,
-            'size'  => $this->size,
+            // 'body'  => $this->toQueryBody(),
+        ];
+
+        if (! is_null($this->_source)) {
+            $query['_source'] = $this->_source;
+        }
+
+        if (! is_null($this->from)) {
+            $query['from'] = $this->from;
+        }
+
+        if (! is_null($this->size)) {
+            $query['size'] = $this->size;
+        }
+
+        return $query;
+    }
+
+    /**
+     * 转换为查询 body
+     *
+     * @return array
+     */
+    public function toQueryBody()
+    {
+        return [
+            'bool' => $this->wheres,
         ];
     }
 }
