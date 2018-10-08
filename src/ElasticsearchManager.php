@@ -36,6 +36,13 @@ class ElasticsearchManager
         $this->app = $app;
     }
 
+    /**
+     * 获取一个单例链接
+     *
+     * @param string $name
+     *
+     * @return \Flc\Laravel\Elasticsearch\ElasticsearchConnection
+     */
     public function connection($name = null)
     {
         $name = $name ?? $this->getDefaultConnection();
@@ -94,7 +101,7 @@ class ElasticsearchManager
      *
      * @param array $config
      *
-     * @return ElasticsearchConnection
+     * @return \Flc\Laravel\Elasticsearch\ElasticsearchConnection
      */
     protected function makeConnection($config)
     {
