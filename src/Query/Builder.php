@@ -34,7 +34,7 @@ class Builder
      *
      * @var string
      */
-    protected $type = 'doc';
+    protected $type;
 
     /**
      * 搜寻条件
@@ -51,7 +51,7 @@ class Builder
      *
      * @var array
      */
-    protected $sorts = [];
+    protected $sort = [];
 
     /**
      * 从X条开始查询
@@ -138,10 +138,8 @@ class Builder
      */
     public function orderBy($column, $direction = 'asc')
     {
-        $this->sorts[] = [
-            $column => [
-                'order' => strtolower($direction) == 'asc' ? 'asc' : 'desc',
-            ],
+        $this->sort[] = [
+            $column => strtolower($direction) == 'asc' ? 'asc' : 'desc',
         ];
 
         return $this;
@@ -276,23 +274,7 @@ class Builder
      */
     public function get()
     {
-        return $this->processSearch(
-            $this->runSearch()
-        );
-    }
-
-    /**
-     * 处理搜索数据结果
-     *
-     * @param array $result
-     *
-     * @return Collection
-     */
-    protected function processSearch($result)
-    {
-        return collect($result['hits']['hits'])->map(function ($item) {
-            return collect($item['_source']);
-        });
+        return $this->runSearch();
     }
 
     /*
@@ -314,10 +296,38 @@ class Builder
      */
     public function toQuery()
     {
-        $query = [
-            'index' => $this->index,
-            // 'body'  => $this->toQueryBody(),
+        return $this->compileQuery();
+    }
+
+    /**
+     * 转换为查询 body
+     *
+     * @return array
+     */
+    public function toQueryBody()
+    {
+        return $this->compileQueryBody();
+
+        return [
+            'bool' => $this->wheres,
+            '',
         ];
+    }
+
+    /**
+     * ==========================
+     * 语法构建
+     * ==========================
+     */
+
+    /**
+     * 返回查询语法
+     *
+     * @return array
+     */
+    protected function compileQuery()
+    {
+        $query = $this->baseQuery();
 
         if (! is_null($this->_source)) {
             $query['_source'] = $this->_source;
@@ -331,18 +341,44 @@ class Builder
             $query['size'] = $this->size;
         }
 
+        if ($body = $this->compileQueryBody()) {
+            $query['body'] = $body;
+        }
+
         return $query;
     }
 
     /**
-     * 转换为查询 body
+     * 返回查询 body 语法
      *
      * @return array
      */
-    public function toQueryBody()
+    protected function compileQueryBody()
     {
-        return [
-            'bool' => $this->wheres,
-        ];
+        $body = [];
+
+        if (count($this->sort) > 0) {
+            $body['sort'] = $this->sort;
+        }
+
+        return $body;
+    }
+
+    /**
+     * 返回基础公共查询
+     *
+     * @return array
+     */
+    protected function baseQuery()
+    {
+        $query = [];
+
+        $query['index'] = $this->index;
+
+        if (! is_null($this->type)) {
+            $query['type'] = $this->type;
+        }
+
+        return $query;
     }
 }
