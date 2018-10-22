@@ -20,14 +20,14 @@ class Grammar
      */
     public function compileWheres(Builder $query)
     {
-        $bool = [];
+        $wheres = [];
 
-        foreach (['must', 'filter', 'should', 'must_not'] as $operation) {
-            if ($where = $query->wheres[$operation]) {
-                $bool[$operation] = $where;
+        foreach ($query->wheres as $type => $where) {
+            if ($where) {
+                $wheres[$type] = $where;
             }
         }
 
-        return $bool;
+        return $wheres;
     }
 }

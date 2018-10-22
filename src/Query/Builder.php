@@ -80,16 +80,25 @@ class Builder
      */
     public $_source;
 
+    // /**
+    //  * All of the available clause operators.
+    //  *
+    //  * @var array
+    //  */
+    // public $operators = [
+    //     '=', '<', '>', '<=', '>=', '<>', '!=', '<=>',
+    //     'like', 'like binary', 'not like', 'ilike',
+    //     '&', '|', '^', '<<', '>>',
+    //     'rlike', 'regexp', 'not regexp',
+    // ];
+
     /**
-     * All of the available clause operators.
+     * 所有的区间查询配置
      *
      * @var array
      */
-    public $operators = [
-        '=', '<', '>', '<=', '>=', '<>', '!=', '<=>',
-        'like', 'like binary', 'not like', 'ilike',
-        '&', '|', '^', '<<', '>>',
-        'rlike', 'regexp', 'not regexp',
+    protected $range_operators = [
+        '>' => 'gt', '<' => 'lt', '>=' => 'gte', '<=' => 'lte',
     ];
 
     /**
@@ -241,8 +250,6 @@ class Builder
         return new static($this->client, $this->grammar);
     }
 
-    // --- 此处开始为where
-
     /**
      * 增加一个条件到查询中
      *
@@ -281,6 +288,22 @@ class Builder
     }
 
     /**
+     * Terms 查询
+     *
+     * @param string $column 字段
+     * @param array  $value  值
+     * @param string $type   条件类型
+     *
+     * @return $this
+     */
+    public function whereTerms($column, array $value, $type = 'filter')
+    {
+        return $this->addWhere(
+            ['terms' => [$column => $value]], $type
+        );
+    }
+
+    /**
      * Match 查询
      *
      * @param string $column 字段
@@ -308,42 +331,103 @@ class Builder
      */
     public function whereRange($column, $operator, $value, $type = 'filter')
     {
-        if (! in_array($operator, ['>=', '>', '<', '<='])) {
+        if (! array_key_exists($operator, $this->range_operators)) {
             throw new InvalidArgumentException("Invalid operator: {$operator}.");
         }
 
-        switch ($operator) {
-            case '>':
-                return $this->addWhere([
-                    'range' => [
-                        $column => ['gt' => $value],
-                    ],
-                ], $type);
-                break;
+        return $this->addWhere([
+            'range' => [
+                $column => [$this->range_operators[$operator] => $value],
+            ],
+        ], $type);
+    }
 
-            case '<':
-                return $this->addWhere([
-                    'range' => [
-                        $column => ['lt' => $value],
-                    ],
-                ], $type);
-                break;
+    /**
+     * Range 区间查询(含等于)
+     *
+     * @param string $column 字段
+     * @param array  $value  区间值
+     * @param string $type   条件类型
+     *
+     * @return $this
+     */
+    public function whereBetween($column, array $value = [], $type = 'filter')
+    {
+        return $this->addWhere([
+            'range' => [
+                $column => [
+                    'gte' => $value[0],
+                    'lte' => $value[1],
+                ],
+            ],
+        ], $type);
+    }
 
-            case '>=':
-                return $this->addWhere([
-                    'range' => [
-                        $column => ['gte' => $value],
-                    ],
-                ], $type);
-                break;
+    // public function where($column, $operator = null, $value = null, $type = 'filter')
+    // {
+    //     // 如果是数组
+    //     if (is_array($column)) {
+    //         return $this->addArrayOfWheres($column);
+    //     }
 
-            case '<=':
-                return $this->addWhere([
-                    'range' => [
-                        $column => ['lte' => $value],
-                    ],
-                ], $type);
-                break;
+    //     //
+    // }
+
+    /**
+     * 添加一个数组条件的查询
+     *
+     * @param array  $column
+     * @param string $type
+     * @param string $method
+     *
+     * @return $this
+     */
+    // protected function addArrayOfWheres($column, $type, $method = 'where')
+    // {
+    //     return $this->whereNested(function ($query) use ($column, $method, $type) {
+    //         foreach ($column as $key => $value) {
+    //             $query->$method($key, '=', $value, $type);
+    //         }
+    //     }, $type);
+    // }
+
+    /**
+     * 嵌套查询
+     *
+     * @param Closure $callback 回调函数
+     * @param string  $type     条件类型
+     *
+     * @return $this
+     */
+    public function whereNested(Closure $callback, $type = 'filter')
+    {
+        call_user_func($callback, $query = $this->forNestedWhere());
+
+        return $this->addNestedWhereQuery($query, $type);
+    }
+
+    /**
+     * 创建一个用户嵌套查询的构建实例
+     *
+     * @return Builder
+     */
+    public function forNestedWhere()
+    {
+        return $this->newQuery();
+    }
+
+    /**
+     * 将嵌套的查询构建条件加入到查询中
+     *
+     * @param Builder $query
+     * @param string  $type
+     */
+    public function addNestedWhereQuery(Builder $query, $type = 'filter')
+    {
+        if ($bool = $query->grammar->compileWheres($query)) {
+            $this->addWhere(
+                ['bool' => $bool], $type
+            );
         }
 
         return $this;
@@ -365,40 +449,40 @@ class Builder
      *
      * @return $this
      */
-    public function where($column, $operator = null, $value = null, $boolean = 'and')
-    {
-        // If the column is an array, we will assume it is an array of key-value pairs
-        // and can add them each as a where clause. We will maintain the boolean we
-        // received when the method was called and pass it into the nested where.
-        if (is_array($column)) {
-            return $this->addArrayOfWheres($column, $boolean);
-        }
+    // public function where($column, $operator = null, $value = null, $boolean = 'and')
+    // {
+    //     // If the column is an array, we will assume it is an array of key-value pairs
+    //     // and can add them each as a where clause. We will maintain the boolean we
+    //     // received when the method was called and pass it into the nested where.
+    //     if (is_array($column)) {
+    //         return $this->addArrayOfWheres($column, $boolean);
+    //     }
 
-        // Here we will make some assumptions about the operator. If only 2 values are
-        // passed to the method, we will assume that the operator is an equals sign
-        // and keep going. Otherwise, we'll require the operator to be passed in.
-        list($value, $operator) = $this->prepareValueAndOperator(
-            $value, $operator, func_num_args() == 2
-        );
+    //     // Here we will make some assumptions about the operator. If only 2 values are
+    //     // passed to the method, we will assume that the operator is an equals sign
+    //     // and keep going. Otherwise, we'll require the operator to be passed in.
+    //     list($value, $operator) = $this->prepareValueAndOperator(
+    //         $value, $operator, func_num_args() == 2
+    //     );
 
-        // If the columns is actually a Closure instance, we will assume the developer
-        // wants to begin a nested where statement which is wrapped in parenthesis.
-        // We'll add that Closure to the query then return back out immediately.
-        if ($column instanceof Closure) {
-            return $this->whereNested($column, $boolean);
-        }
+    //     // If the columns is actually a Closure instance, we will assume the developer
+    //     // wants to begin a nested where statement which is wrapped in parenthesis.
+    //     // We'll add that Closure to the query then return back out immediately.
+    //     if ($column instanceof Closure) {
+    //         return $this->whereNested($column, $boolean);
+    //     }
 
-        // If the given operator is not found in the list of valid operators we will
-        // assume that the developer is just short-cutting the '=' operators and
-        // we will set the operators to '=' and set the values appropriately.
-        if ($this->invalidOperator($operator)) {
-            list($value, $operator) = [$operator, '='];
-        }
+    //     // If the given operator is not found in the list of valid operators we will
+    //     // assume that the developer is just short-cutting the '=' operators and
+    //     // we will set the operators to '=' and set the values appropriately.
+    //     if ($this->invalidOperator($operator)) {
+    //         list($value, $operator) = [$operator, '='];
+    //     }
 
-        $this->performWhere($column, $value, $operator);
+    //     $this->performWhere($column, $value, $operator);
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
     /**
      * 处理搜索
@@ -568,72 +652,6 @@ class Builder
         $this->wheres['must_not'][] = [
             'terms' => [$column => $value],
         ];
-
-        return $this;
-    }
-
-    /**
-     * 区间查询
-     *
-     * @see https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-range-query.html
-     *
-     * @param string $column
-     * @param array  $value
-     *
-     * @return $this
-     */
-    public function whereBetween($column, array $value = [])
-    {
-        $this->wheres['filter'][] = [
-            'range' => [
-                $column => [
-                    'gte' => $value[0],
-                    'lte' => $value[1],
-                ],
-            ],
-        ];
-
-        return $this;
-    }
-
-    /**
-     * 将嵌套语句添加到查询条件中
-     *
-     * @param \Closure $callback
-     * @param string   $boolean
-     *
-     * @return $this
-     */
-    public function whereNested(Closure $callback, $boolean = 'and')
-    {
-        call_user_func($callback, $query = $this->forNestedWhere());
-
-        return $this->addNestedWhereQuery($query, $boolean);
-    }
-
-    /**
-     * 创建一个用于嵌套条件查询实例
-     *
-     * @return Builder
-     */
-    public function forNestedWhere()
-    {
-        return $this->newQuery();
-    }
-
-    /**
-     * 添加嵌套的查询构造条件
-     *
-     * @param Builder|static $query
-     * @param string         $boolean
-     *
-     * @return $this
-     */
-    public function addNestedWhereQuery($query, $boolean = 'and')
-    {
-        if ($bool = $this->grammar->compileWheres($this)) {
-            $this->addWhere(['bool' => $bool], $boolean == 'and' ? 'filter' : 'should');
-        }
 
         return $this;
     }
