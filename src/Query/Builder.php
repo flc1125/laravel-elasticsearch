@@ -366,22 +366,37 @@ class Builder
         ], $type);
     }
 
+    /**
+     * where 条件查询
+     *
+     * @param string|Colsure|array $column
+     * @param mixed                $operator
+     * @param mixed                $value
+     * @param string               $type
+     *
+     * @return $this
+     */
     public function where($column, $operator = null, $value = null, $type = 'filter')
     {
         // 如果是数组
         if (is_array($column)) {
-            return $this->addArrayOfWheres($column);
+            return $this->addArrayOfWheres($column, $type);
         }
 
+        // 如果 column 是匿名函数
+        if ($column instanceof Closure) {
+            return $this->whereNested(
+                $column, func_num_args() === 2 ? $operator : $type
+            );
+        }
+
+        // 如果只有两个参数
         if (func_num_args() === 2) {
             list($value, $operator) = [$operator, '='];
         }
 
-        if ($column instanceof Closure) {
-            // return $this->whereNested($column, $type);
-        }
-
-        $this->performWhere($column, $value, $operator);
+        // 符号查询
+        $this->performWhere($column, $value, $operator, $type);
 
         return $this;
     }
@@ -390,15 +405,16 @@ class Builder
      * 添加一个数组条件的查询
      *
      * @param array  $column
+     * @param string $type
      * @param string $method
      *
      * @return $this
      */
-    protected function addArrayOfWheres($column, $method = 'where')
+    protected function addArrayOfWheres($column, $type, $method = 'where')
     {
-        return $this->whereNested(function ($query) use ($column, $method) {
+        return $this->whereNested(function ($query) use ($column, $method, $type) {
             foreach ($column as $key => $value) {
-                $query->$method($key, '=', $value);
+                $query->$method($key, '=', $value, $type);
             }
         });
     }
@@ -451,26 +467,35 @@ class Builder
      * @param string $column   字段
      * @param mixed  $value    值
      * @param string $operator 符号
+     * @param string $type     条件类型
      *
      * @return array
      */
-    protected function performWhere($column, $value, $operator)
+    protected function performWhere($column, $value, $operator, $type = 'filter')
     {
         switch ($operator) {
             case '=':
-                return $this->whereTerm($column, $value);
+                return $this->whereTerm($column, $value, $type);
                 break;
 
             case '>':
             case '<':
             case '>=':
             case '<=':
-                return $this->whereRange($column, $operator, $value);
+                return $this->whereRange($column, $operator, $value, $type);
                 break;
 
             case '!=':
             case '<>':
                 return $this->whereTerm($column, $value, 'must_not');
+                break;
+
+            case 'like':
+                return $this->whereMatch($column, $value, $type);
+                break;
+
+            case 'not like':
+                return $this->whereMatch($column, $value, 'must_not');
                 break;
         }
     }
