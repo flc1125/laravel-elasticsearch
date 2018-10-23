@@ -18,11 +18,14 @@ class Builder
     use BuildsQueries;
 
     /**
-     * Elasticsearch Client
-     *
      * @var \Elasticsearch\Client
      */
     protected $client;
+
+    /**
+     * @var \Flc\Laravel\Elasticsearch\Grammars\Grammar
+     */
+    protected $grammar;
 
     /**
      * 索引名
@@ -363,33 +366,42 @@ class Builder
         ], $type);
     }
 
-    // public function where($column, $operator = null, $value = null, $type = 'filter')
-    // {
-    //     // 如果是数组
-    //     if (is_array($column)) {
-    //         return $this->addArrayOfWheres($column);
-    //     }
+    public function where($column, $operator = null, $value = null, $type = 'filter')
+    {
+        // 如果是数组
+        if (is_array($column)) {
+            return $this->addArrayOfWheres($column);
+        }
 
-    //     //
-    // }
+        if (func_num_args() === 2) {
+            list($value, $operator) = [$operator, '='];
+        }
+
+        if ($column instanceof Closure) {
+            // return $this->whereNested($column, $type);
+        }
+
+        $this->performWhere($column, $value, $operator);
+
+        return $this;
+    }
 
     /**
      * 添加一个数组条件的查询
      *
      * @param array  $column
-     * @param string $type
      * @param string $method
      *
      * @return $this
      */
-    // protected function addArrayOfWheres($column, $type, $method = 'where')
-    // {
-    //     return $this->whereNested(function ($query) use ($column, $method, $type) {
-    //         foreach ($column as $key => $value) {
-    //             $query->$method($key, '=', $value, $type);
-    //         }
-    //     }, $type);
-    // }
+    protected function addArrayOfWheres($column, $method = 'where')
+    {
+        return $this->whereNested(function ($query) use ($column, $method) {
+            foreach ($column as $key => $value) {
+                $query->$method($key, '=', $value);
+            }
+        });
+    }
 
     /**
      * 嵌套查询
@@ -431,6 +443,36 @@ class Builder
         }
 
         return $this;
+    }
+
+    /**
+     * 处理符号搜索
+     *
+     * @param string $column   字段
+     * @param mixed  $value    值
+     * @param string $operator 符号
+     *
+     * @return array
+     */
+    protected function performWhere($column, $value, $operator)
+    {
+        switch ($operator) {
+            case '=':
+                return $this->whereTerm($column, $value);
+                break;
+
+            case '>':
+            case '<':
+            case '>=':
+            case '<=':
+                return $this->whereRange($column, $operator, $value);
+                break;
+
+            case '!=':
+            case '<>':
+                return $this->whereTerm($column, $value, 'must_not');
+                break;
+        }
     }
 
     // ===========================================================
@@ -483,91 +525,6 @@ class Builder
 
     //     return $this;
     // }
-
-    /**
-     * 处理搜索
-     *
-     * @param string $column   字段
-     * @param mixed  $value    值
-     * @param string $operator 符号
-     *
-     * @return array
-     */
-    protected function performWhere($column, $value, $operator)
-    {
-        switch ($operator) {
-            case '=':
-                return $this->wheres['filter'][] = [
-                    'term' => [$column => $value],
-                ];
-                break;
-
-            case '>':
-                return $this->wheres['filter'][] = [
-                    'range' => [
-                        $column => [
-                            'gt' => $value,
-                        ],
-                    ],
-                ];
-                break;
-
-            case '<':
-                return $this->wheres['filter'][] = [
-                    'range' => [
-                        $column => [
-                            'lt' => $value,
-                        ],
-                    ],
-                ];
-                break;
-
-            case '>=':
-                return $this->wheres['filter'][] = [
-                    'range' => [
-                        $column => [
-                            'gte' => $value,
-                        ],
-                    ],
-                ];
-                break;
-
-            case '<=':
-                return $this->wheres['filter'][] = [
-                    'range' => [
-                        $column => [
-                            'lte' => $value,
-                        ],
-                    ],
-                ];
-                break;
-
-            case '!=':
-            case '<>':
-                return $this->wheres['must_not'][] = [
-                    'term' => [$column => $value],
-                ];
-                break;
-        }
-    }
-
-    /**
-     * Add an array of where clauses to the query.
-     *
-     * @param array  $column
-     * @param string $boolean
-     * @param string $method
-     *
-     * @return $this
-     */
-    protected function addArrayOfWheres($column, $boolean, $method = 'where')
-    {
-        return $this->whereNested(function ($query) use ($column, $method, $boolean) {
-            foreach ($column as $key => $value) {
-                $query->$method($key, '=', $value, $boolean);
-            }
-        }, $boolean);
-    }
 
     /**
      * Prepare the value and operator for a where clause.
