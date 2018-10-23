@@ -275,7 +275,7 @@ class Builder
     }
 
     /**
-     * Term 查询
+     * term 查询
      *
      * @param string $column 字段
      * @param mixed  $value  值
@@ -291,7 +291,7 @@ class Builder
     }
 
     /**
-     * Terms 查询
+     * terms 查询
      *
      * @param string $column 字段
      * @param array  $value  值
@@ -307,7 +307,7 @@ class Builder
     }
 
     /**
-     * Match 查询
+     * match 查询
      *
      * @param string $column 字段
      * @param mixed  $value  值
@@ -323,7 +323,23 @@ class Builder
     }
 
     /**
-     * Range 查询
+     * match_phrase 查询
+     *
+     * @param string $column 字段
+     * @param mixed  $value  值
+     * @param string $type   条件类型
+     *
+     * @return $this
+     */
+    public function whereMatchPhrase($column, $value, $type = 'filter')
+    {
+        return $this->addWhere(
+            ['match_phrase' => [$column => $value]], $type
+        );
+    }
+
+    /**
+     * range 查询
      *
      * @param string $column   字段
      * @param string $operator 查询符号
@@ -346,7 +362,7 @@ class Builder
     }
 
     /**
-     * Range 区间查询(含等于)
+     * 区间查询(含等于)
      *
      * @param string $column 字段
      * @param array  $value  区间值
@@ -490,12 +506,20 @@ class Builder
                 return $this->whereTerm($column, $value, 'must_not');
                 break;
 
-            case 'like':
+            case 'match':
                 return $this->whereMatch($column, $value, $type);
                 break;
 
-            case 'not like':
+            case 'not match':
                 return $this->whereMatch($column, $value, 'must_not');
+                break;
+
+            case 'like':
+                return $this->whereMatchPhrase($column, $value, $type);
+                break;
+
+            case 'not like':
+                return $this->whereMatchPhrase($column, $value, 'must_not');
                 break;
         }
     }
