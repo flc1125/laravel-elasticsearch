@@ -383,6 +383,44 @@ class Builder
     }
 
     /**
+     * 字段非 null 查询
+     *
+     * @param string $column
+     * @param string $type
+     *
+     * @return $this
+     */
+    public function whereExists($column, $type = 'filter')
+    {
+        return $this->addWhere([
+            'exists' => ['field' => $column],
+        ], $type);
+    }
+
+    /**
+     * 查询字段为 null
+     *
+     * @param string $column
+     *
+     * @return $this
+     */
+    public function whereNotExists($column)
+    {
+        return $this->whereExists($column, 'must_not');
+    }
+
+    /**
+     * whereNotExists 别名
+     *
+     * @param  string $column
+     * @return $this
+     */
+    public function whereNull($column)
+    {
+        return $this->whereNotExists($column);
+    }
+
+    /**
      * where 条件查询
      *
      * @param string|Colsure|array $column
