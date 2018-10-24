@@ -2,7 +2,9 @@
 
 namespace Flc\Laravel\Elasticsearch\Query;
 
+use Closure;
 use Elasticsearch\Client as ElasticsearchClient;
+use Flc\Laravel\Elasticsearch\Grammars\Grammar;
 use Illuminate\Database\Concerns\BuildsQueries;
 use InvalidArgumentException;
 
@@ -16,32 +18,37 @@ class Builder
     use BuildsQueries;
 
     /**
-     * Elasticsearch Client
-     *
      * @var \Elasticsearch\Client
      */
     protected $client;
+
+    /**
+     * @var \Flc\Laravel\Elasticsearch\Grammars\Grammar
+     */
+    protected $grammar;
 
     /**
      * 索引名
      *
      * @var string
      */
-    protected $index;
+    public $index;
 
     /**
      * 索引Type
      *
      * @var string
      */
-    protected $type;
+    public $type;
 
     /**
      * 搜寻条件
      *
      * @var array
      */
-    protected $wheres = [
+    public $wheres = [
+        'filter'   => [],
+        'should'   => [],
         'must'     => [],
         'must_not' => [],
     ];
@@ -51,21 +58,21 @@ class Builder
      *
      * @var array
      */
-    protected $sort = [];
+    public $sort = [];
 
     /**
      * 从X条开始查询
      *
      * @var int
      */
-    protected $from = null;
+    public $from;
 
     /**
      * 获取数量
      *
      * @var int
      */
-    protected $size = null;
+    public $size;
 
     // protected $aggs = [];
 
@@ -74,7 +81,28 @@ class Builder
      *
      * @var array
      */
-    protected $_source = null;
+    public $_source;
+
+    // /**
+    //  * All of the available clause operators.
+    //  *
+    //  * @var array
+    //  */
+    // public $operators = [
+    //     '=', '<', '>', '<=', '>=', '<>', '!=', '<=>',
+    //     'like', 'like binary', 'not like', 'ilike',
+    //     '&', '|', '^', '<<', '>>',
+    //     'rlike', 'regexp', 'not regexp',
+    // ];
+
+    /**
+     * 所有的区间查询配置
+     *
+     * @var array
+     */
+    protected $range_operators = [
+        '>' => 'gt', '<' => 'lt', '>=' => 'gte', '<=' => 'lte',
+    ];
 
     /**
      * 实例化一个构建链接
@@ -83,7 +111,8 @@ class Builder
      */
     public function __construct(ElasticsearchClient $client)
     {
-        $this->client = $client;
+        $this->client  = $client;
+        $this->grammar = new Grammar();
     }
 
     /**
@@ -214,58 +243,388 @@ class Builder
         return $this->skip(($page - 1) * $perPage)->take($perPage);
     }
 
-    // =======================================================
+    /**
+     * 返回新的构建类
+     *
+     * @return \Flc\Laravel\Elasticsearch\Query\Builder
+     */
+    public function newQuery()
+    {
+        return new static($this->client, $this->grammar);
+    }
 
     /**
-     * 通过文档 ID 查询数据
+     * 增加一个条件到查询中
      *
-     * @param mixed $id
-     * @param array $columns
+     * @param mixed  $value 条件语法
+     * @param string $type  条件类型，filter/must/must_not/should
      *
-     * @return mixed
+     * @throws \InvalidArgumentException
+     *
+     * @return $this
      */
-    public function find($id, $columns = ['*'])
+    public function addWhere($value, $type = 'filter')
     {
-        $params = [
-            'index'   => $this->index,
-            'type'    => $this->type,
-            'id'      => $id,
-            '_source' => $columns,
-        ];
+        if (! array_key_exists($type, $this->wheres)) {
+            throw new InvalidArgumentException("Invalid where type: {$type}.");
+        }
 
-        return $this->runExtract(
-            $this->client->get($params)
+        $this->wheres[$type][] = $value;
+
+        return $this;
+    }
+
+    /**
+     * term 查询
+     *
+     * @param string $column 字段
+     * @param mixed  $value  值
+     * @param string $type   条件类型
+     *
+     * @return $this
+     */
+    public function whereTerm($column, $value, $type = 'filter')
+    {
+        return $this->addWhere(
+            ['term' => [$column => $value]], $type
         );
     }
 
     /**
-     * 执行格式化输出数据
+     * terms 查询
      *
-     * @param array $result
-     * @param array $fields 如为单个，则直接返回数组
+     * @param string $column 字段
+     * @param array  $value  值
+     * @param string $type   条件类型
+     *
+     * @return $this
+     */
+    public function whereTerms($column, array $value, $type = 'filter')
+    {
+        return $this->addWhere(
+            ['terms' => [$column => $value]], $type
+        );
+    }
+
+    /**
+     * match 查询
+     *
+     * @param string $column 字段
+     * @param mixed  $value  值
+     * @param string $type   条件类型
+     *
+     * @return $this
+     */
+    public function whereMatch($column, $value, $type = 'filter')
+    {
+        return $this->addWhere(
+            ['match' => [$column => $value]], $type
+        );
+    }
+
+    /**
+     * match_phrase 查询
+     *
+     * @param string $column 字段
+     * @param mixed  $value  值
+     * @param string $type   条件类型
+     *
+     * @return $this
+     */
+    public function whereMatchPhrase($column, $value, $type = 'filter')
+    {
+        return $this->addWhere(
+            ['match_phrase' => [$column => $value]], $type
+        );
+    }
+
+    /**
+     * range 查询
+     *
+     * @param string $column   字段
+     * @param string $operator 查询符号
+     * @param mixed  $value    值
+     * @param string $type     条件类型
+     *
+     * @return $this
+     */
+    public function whereRange($column, $operator, $value, $type = 'filter')
+    {
+        if (! array_key_exists($operator, $this->range_operators)) {
+            throw new InvalidArgumentException("Invalid operator: {$operator}.");
+        }
+
+        return $this->addWhere([
+            'range' => [
+                $column => [$this->range_operators[$operator] => $value],
+            ],
+        ], $type);
+    }
+
+    /**
+     * 区间查询(含等于)
+     *
+     * @param string $column 字段
+     * @param array  $value  区间值
+     * @param string $type   条件类型
+     *
+     * @return $this
+     */
+    public function whereBetween($column, array $value = [], $type = 'filter')
+    {
+        return $this->addWhere([
+            'range' => [
+                $column => [
+                    'gte' => $value[0],
+                    'lte' => $value[1],
+                ],
+            ],
+        ], $type);
+    }
+
+    /**
+     * 字段非 null 查询
+     *
+     * @param string $column
+     * @param string $type
+     *
+     * @return $this
+     */
+    public function whereExists($column, $type = 'filter')
+    {
+        return $this->addWhere([
+            'exists' => ['field' => $column],
+        ], $type);
+    }
+
+    /**
+     * 查询字段为 null
+     *
+     * @param string $column
+     *
+     * @return $this
+     */
+    public function whereNotExists($column)
+    {
+        return $this->whereExists($column, 'must_not');
+    }
+
+    /**
+     * whereNotExists 别名
+     *
+     * @param  string $column
+     * @return $this
+     */
+    public function whereNull($column)
+    {
+        return $this->whereNotExists($column);
+    }
+
+    /**
+     * where 条件查询
+     *
+     * @param string|Colsure|array $column
+     * @param mixed                $operator
+     * @param mixed                $value
+     * @param string               $type
+     *
+     * @return $this
+     */
+    public function where($column, $operator = null, $value = null, $type = 'filter')
+    {
+        // 如果是数组
+        if (is_array($column)) {
+            return $this->addArrayOfWheres($column, $type);
+        }
+
+        // 如果 column 是匿名函数
+        if ($column instanceof Closure) {
+            return $this->whereNested(
+                $column, $type
+            );
+        }
+
+        // 如果只有两个参数
+        if (func_num_args() === 2) {
+            list($value, $operator) = [$operator, '='];
+        }
+
+        // 符号查询
+        $this->performWhere($column, $value, $operator, $type);
+
+        return $this;
+    }
+
+    /**
+     * or where 查询
+     *
+     * @param string|Colsure|array $column
+     * @param mixed                $operator
+     * @param mixed                $value
+     *
+     * @return $this
+     */
+    public function orWhere($column, $operator = null, $value = null)
+    {
+        if (func_num_args() === 2) {
+            list($value, $operator) = [$operator, '='];
+        }
+
+        return $this->where($column, $operator, $value, 'should');
+    }
+
+    /**
+     * 多条件 and 查询；whereTerms 别名
+     *
+     * @param string $column 字段
+     * @param array  $value  值
+     * @param string $type   条件类型
+     *
+     * @return $this
+     */
+    public function whereIn($column, array $value, $type = 'filter')
+    {
+        return $this->whereTerms($column, $value, $type);
+    }
+
+    /**
+     * 多条件 OR 查询
+     *
+     * @param string $column
+     * @param array  $value
+     *
+     * @return $this
+     */
+    public function orWhereIn($column, array $value)
+    {
+        return $this->whereIn($column, $value, 'should');
+    }
+
+    /**
+     * 多条件反查询；反whereIn
+     *
+     * @param string $column 字段
+     * @param array  $value  值
+     *
+     * @return $this
+     */
+    public function whereNotIn($column, array $value)
+    {
+        return $this->whereIn($column, $value, 'must_not');
+    }
+
+    /**
+     * 添加一个数组条件的查询
+     *
+     * @param array  $column
+     * @param string $type
+     * @param string $method
+     *
+     * @return $this
+     */
+    protected function addArrayOfWheres($column, $type, $method = 'where')
+    {
+        return $this->whereNested(function ($query) use ($column, $method, $type) {
+            foreach ($column as $key => $value) {
+                $query->$method($key, '=', $value, $type);
+            }
+        });
+    }
+
+    /**
+     * 嵌套查询
+     *
+     * @param Closure $callback 回调函数
+     * @param string  $type     条件类型
+     *
+     * @return $this
+     */
+    public function whereNested(Closure $callback, $type = 'filter')
+    {
+        call_user_func($callback, $query = $this->forNestedWhere());
+
+        return $this->addNestedWhereQuery($query, $type);
+    }
+
+    /**
+     * 创建一个用户嵌套查询的构建实例
+     *
+     * @return Builder
+     */
+    public function forNestedWhere()
+    {
+        return $this->newQuery();
+    }
+
+    /**
+     * 将嵌套的查询构建条件加入到查询中
+     *
+     * @param Builder $query
+     * @param string  $type
+     */
+    public function addNestedWhereQuery(Builder $query, $type = 'filter')
+    {
+        if ($bool = $query->grammar->compileWheres($query)) {
+            $this->addWhere(
+                ['bool' => $bool], $type
+            );
+        }
+
+        return $this;
+    }
+
+    /**
+     * 处理符号搜索
+     *
+     * @param string $column   字段
+     * @param mixed  $value    值
+     * @param string $operator 符号
+     * @param string $type     条件类型
      *
      * @return array
      */
-    protected function runExtract($result = [], $fields = ['_source'])
+    protected function performWhere($column, $value, $operator, $type = 'filter')
     {
-        $data = [];
+        switch ($operator) {
+            case '=':
+                return $this->whereTerm($column, $value, $type);
+                break;
 
-        $fields = is_string($fields) ? explode(',', $fields) : $fields;
+            case '>':
+            case '<':
+            case '>=':
+            case '<=':
+                return $this->whereRange($column, $operator, $value, $type);
+                break;
 
-        foreach ($fields as $field) {
-            if (! isset($result[$field])) {
-                throw new InvalidArgumentException("[{$field} not found]");
-            }
+            case '!=':
+            case '<>':
+                return $this->whereTerm($column, $value, 'must_not');
+                break;
 
-            $data[$field] = $result[$field];
+            case 'match':
+                return $this->whereMatch($column, $value, $type);
+                break;
+
+            case 'not match':
+                return $this->whereMatch($column, $value, 'must_not');
+                break;
+
+            case 'like':
+                return $this->whereMatchPhrase($column, $value, $type);
+                break;
+
+            case 'not like':
+                return $this->whereMatchPhrase($column, $value, 'must_not');
+                break;
         }
-
-        if (count($data) == 1) {
-            return collect(reset($data));
-        }
-
-        return collect($data);
     }
+
+    // ===========================================================
+    // 以下未确定版本
+    // ===========================================================
+
+    // =======================================================
 
     /*
      * 返回数据
@@ -274,18 +633,8 @@ class Builder
      */
     public function get()
     {
-        return $this->runSearch();
-    }
-
-    /*
-     * 执行搜索
-     *
-     * @return array
-     */
-    protected function runSearch()
-    {
         return $this->client->search(
-            $this->toQuery()
+            $this->toParam()
         );
     }
 
@@ -294,9 +643,9 @@ class Builder
      *
      * @return array
      */
-    public function toQuery()
+    public function toParam()
     {
-        return $this->compileQuery();
+        return $this->compileSelect();
     }
 
     /**
@@ -304,14 +653,9 @@ class Builder
      *
      * @return array
      */
-    public function toQueryBody()
+    public function toBody()
     {
-        return $this->compileQueryBody();
-
-        return [
-            'bool' => $this->wheres,
-            '',
-        ];
+        return $this->compileSelectBody();
     }
 
     /**
@@ -325,7 +669,7 @@ class Builder
      *
      * @return array
      */
-    protected function compileQuery()
+    protected function compileSelect()
     {
         $query = $this->baseQuery();
 
@@ -341,9 +685,11 @@ class Builder
             $query['size'] = $this->size;
         }
 
-        if ($body = $this->compileQueryBody()) {
+        if ($body = $this->compileSelectBody()) {
             $query['body'] = $body;
         }
+
+        print_r($query);
 
         return $query;
     }
@@ -353,12 +699,16 @@ class Builder
      *
      * @return array
      */
-    protected function compileQueryBody()
+    protected function compileSelectBody()
     {
         $body = [];
 
         if (count($this->sort) > 0) {
             $body['sort'] = $this->sort;
+        }
+
+        if ($bool = $this->grammar->compileWheres($this)) {
+            $body['query']['bool'] = $bool;
         }
 
         return $body;
