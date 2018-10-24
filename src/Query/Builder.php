@@ -108,11 +108,12 @@ class Builder
      * 实例化一个构建链接
      *
      * @param ElasticsearchClient $client
+     * @param Grammar             $grammar
      */
-    public function __construct(ElasticsearchClient $client)
+    public function __construct(ElasticsearchClient $client, Grammar $grammar)
     {
         $this->client  = $client;
-        $this->grammar = new Grammar();
+        $this->grammar = $grammar;
     }
 
     /**
@@ -412,7 +413,8 @@ class Builder
     /**
      * whereNotExists 别名
      *
-     * @param  string $column
+     * @param string $column
+     *
      * @return $this
      */
     public function whereNull($column)
