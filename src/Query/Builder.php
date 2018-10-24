@@ -402,7 +402,7 @@ class Builder
         // 如果 column 是匿名函数
         if ($column instanceof Closure) {
             return $this->whereNested(
-                $column, func_num_args() === 2 ? $operator : $type
+                $column, $type
             );
         }
 
@@ -415,6 +415,64 @@ class Builder
         $this->performWhere($column, $value, $operator, $type);
 
         return $this;
+    }
+
+    /**
+     * or where 查询
+     *
+     * @param string|Colsure|array $column
+     * @param mixed                $operator
+     * @param mixed                $value
+     *
+     * @return $this
+     */
+    public function orWhere($column, $operator = null, $value = null)
+    {
+        if (func_num_args() === 2) {
+            list($value, $operator) = [$operator, '='];
+        }
+
+        return $this->where($column, $operator, $value, 'should');
+    }
+
+    /**
+     * 多条件 and 查询；whereTerms 别名
+     *
+     * @param string $column 字段
+     * @param array  $value  值
+     * @param string $type   条件类型
+     *
+     * @return $this
+     */
+    public function whereIn($column, array $value, $type = 'filter')
+    {
+        return $this->whereTerms($column, $value, $type);
+    }
+
+    /**
+     * 多条件 OR 查询
+     *
+     * @param string $column
+     * @param array  $value
+     *
+     * @return $this
+     */
+    public function orWhereIn($column, array $value)
+    {
+        return $this->whereIn($column, $value, 'should');
+    }
+
+    /**
+     * 多条件反查询；反whereIn
+     *
+     * @param string $column 字段
+     * @param array  $value  值
+     *
+     * @return $this
+     */
+    public function whereNotIn($column, array $value)
+    {
+        return $this->whereIn($column, $value, 'must_not');
     }
 
     /**
@@ -527,142 +585,6 @@ class Builder
     // ===========================================================
     // 以下未确定版本
     // ===========================================================
-
-    // where - start
-
-    /**
-     * 增加搜索条件
-     *
-     * @param string|array|\Closure $column
-     * @param string|null           $operator
-     * @param mixed                 $value
-     * @param string                $boolean
-     *
-     * @return $this
-     */
-    // public function where($column, $operator = null, $value = null, $boolean = 'and')
-    // {
-    //     // If the column is an array, we will assume it is an array of key-value pairs
-    //     // and can add them each as a where clause. We will maintain the boolean we
-    //     // received when the method was called and pass it into the nested where.
-    //     if (is_array($column)) {
-    //         return $this->addArrayOfWheres($column, $boolean);
-    //     }
-
-    //     // Here we will make some assumptions about the operator. If only 2 values are
-    //     // passed to the method, we will assume that the operator is an equals sign
-    //     // and keep going. Otherwise, we'll require the operator to be passed in.
-    //     list($value, $operator) = $this->prepareValueAndOperator(
-    //         $value, $operator, func_num_args() == 2
-    //     );
-
-    //     // If the columns is actually a Closure instance, we will assume the developer
-    //     // wants to begin a nested where statement which is wrapped in parenthesis.
-    //     // We'll add that Closure to the query then return back out immediately.
-    //     if ($column instanceof Closure) {
-    //         return $this->whereNested($column, $boolean);
-    //     }
-
-    //     // If the given operator is not found in the list of valid operators we will
-    //     // assume that the developer is just short-cutting the '=' operators and
-    //     // we will set the operators to '=' and set the values appropriately.
-    //     if ($this->invalidOperator($operator)) {
-    //         list($value, $operator) = [$operator, '='];
-    //     }
-
-    //     $this->performWhere($column, $value, $operator);
-
-    //     return $this;
-    // }
-
-    /**
-     * Prepare the value and operator for a where clause.
-     *
-     * @param string $value
-     * @param string $operator
-     * @param bool   $useDefault
-     *
-     * @throws \InvalidArgumentException
-     *
-     * @return array
-     */
-    protected function prepareValueAndOperator($value, $operator, $useDefault = false)
-    {
-        if ($useDefault) {
-            return [$operator, '='];
-        } elseif ($this->invalidOperatorAndValue($operator, $value)) {
-            throw new InvalidArgumentException('Illegal operator and value combination.');
-        }
-
-        return [$value, $operator];
-    }
-
-    /**
-     * Determine if the given operator and value combination is legal.
-     *
-     * Prevents using Null values with invalid operators.
-     *
-     * @param string $operator
-     * @param mixed  $value
-     *
-     * @return bool
-     */
-    protected function invalidOperatorAndValue($operator, $value)
-    {
-        return is_null($value) && in_array($operator, $this->operators) && ! in_array($operator, ['=', '<>', '!=']);
-    }
-
-    /**
-     * Determine if the given operator is supported.
-     *
-     * @param string $operator
-     *
-     * @return bool
-     */
-    protected function invalidOperator($operator)
-    {
-        return ! in_array(strtolower($operator), $this->operators, true);
-    }
-
-    /**
-     * 多条件过滤
-     *
-     * @see https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-terms-query.html
-     *
-     * @param string $column
-     * @param array  $value
-     *
-     * @return $this
-     */
-    public function whereIn($column, array $value = [])
-    {
-        $this->wheres['filter'][] = [
-            'terms' => [$column => $value],
-        ];
-
-        return $this;
-    }
-
-    /**
-     * 多条件过滤（非）
-     *
-     * @see https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-terms-query.html
-     *
-     * @param string $column
-     * @param array  $value
-     *
-     * @return $this
-     */
-    public function whereNotIn($column, array $value = [])
-    {
-        $this->wheres['must_not'][] = [
-            'terms' => [$column => $value],
-        ];
-
-        return $this;
-    }
-
-    // where - end
 
     // =======================================================
 
