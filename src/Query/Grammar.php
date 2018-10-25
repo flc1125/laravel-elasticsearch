@@ -32,7 +32,7 @@ class Grammar
             $params['size'] = $query->size;
         }
 
-        if ($body = $this->compileBody($query)) {
+        if ($body = $query->grammar->compileBody($query)) {
             $params['body'] = $body;
         }
 
@@ -60,7 +60,46 @@ class Grammar
             $body['query']['bool'] = $bool;
         }
 
+        if ($aggs = $query->grammar->compileAggs($query)) {
+            $body['aggs'] = $aggs;
+        }
+
         return $body;
+    }
+
+    /**
+     * 返回聚合的参数===================
+     *
+     * @param Builder $query
+     *
+     * @return array
+     */
+    public function compileAggs(Builder $query)
+    {
+        $aggs = [];
+
+        foreach ($query->aggs as $column => $function) {
+            $field = $query->grammar->combinAggsColumnFunction($column, $function);
+
+            $aggs[$field] = [
+                $function => ['field' => $column],
+            ];
+        }
+
+        return $aggs;
+    }
+
+    /**
+     * 通过字段和聚合类型，组合聚合字段别名===================
+     *
+     * @param string $column
+     * @param string $function
+     *
+     * @return string
+     */
+    public function combinAggsColumnFunction($column, $function)
+    {
+        return sprintf('%s__%s', $column, $function);
     }
 
     /**
@@ -70,7 +109,7 @@ class Grammar
      *
      * @return array
      */
-    protected function compileBase(Builder $query)
+    public function compileBase(Builder $query)
     {
         $params = [];
 

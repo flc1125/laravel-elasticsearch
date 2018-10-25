@@ -23,4 +23,16 @@ class Processor
             return (object) $result['_source'];
         }, $results['hits']['hits']);
     }
+
+    // ===================
+
+    public function processAggregateFunction(Builder $query, $results)
+    {
+        return $this->processAggregate($query, $results);
+    }
+
+    public function processAggregate(Builder $query, $results)
+    {
+        return $results;
+    }
 }

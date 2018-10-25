@@ -6,6 +6,7 @@ use Closure;
 use Elasticsearch\Client as ElasticsearchClient;
 use Illuminate\Database\Concerns\BuildsQueries;
 use InvalidArgumentException;
+use Illuminate\Pagination\Paginator;
 
 /**
  * Elasticsearch 查询构建类
@@ -78,14 +79,19 @@ class Builder
      */
     public $size;
 
-    // protected $aggs = [];
-
     /**
      * 需要查询的字段
      *
      * @var array
      */
     public $_source;
+
+    /**
+     * 聚合查询条件
+     *
+     * @var array
+     */
+    public $aggs;
 
     /**
      * 所有的区间查询配置
@@ -626,7 +632,7 @@ class Builder
      */
     public function get($columns = ['*'])
     {
-        return collect($this->onceWithColumns($columns, function () {
+        return collect($this->onceWithColumn($columns, function () {
             return $this->processor->processSelect($this, $this->runSelect());
         }));
     }
@@ -673,7 +679,7 @@ class Builder
      *
      * @return mixed
      */
-    protected function onceWithColumns($columns, $callback)
+    protected function onceWithColumn($columns, $callback)
     {
         $original = $this->_source;
 
@@ -687,4 +693,45 @@ class Builder
 
         return $result;
     }
+
+    // 以下为不确定数据
+
+    /**
+     * 执行指标聚合查询
+     *
+     * @param  string $function 指标类型：avg/max/min/sum/
+     * @param  string  $column 字段
+     * @return int
+     */
+    public function aggregate($function, $column)
+    {
+        $this->aggs[$column] = $function;
+
+        return $this->processor->processAggregateFunction(
+            $this, $this->runSelect(), $function
+        );
+    }
+
+    // /**
+    //  * 分页查询
+    //  *
+    //  * @param  int  $perPage
+    //  * @param  array  $columns
+    //  * @param  string  $pageName
+    //  * @param  int|null  $page
+    //  * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    //  */
+    // public function paginate($perPage = 15, $columns = ['*'], $pageName = 'page', $page = null)
+    // {
+    //     $page = $page ?: Paginator::resolveCurrentPage($pageName);
+
+    //     $total = $this->getCountForPagination($columns);
+
+    //     $results = $total ? $this->forPage($page, $perPage)->get($columns) : collect();
+
+    //     return $this->paginator($results, $total, $perPage, $page, [
+    //         'path' => Paginator::resolveCurrentPath(),
+    //         'pageName' => $pageName,
+    //     ]);
+    // }
 }
