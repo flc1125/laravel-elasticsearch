@@ -626,9 +626,9 @@ class Builder
      */
     public function get($columns = ['*'])
     {
-        return $this->onceWithColumns($columns, function () {
-            return $this->runSearch();
-        });
+        return collect($this->onceWithColumns($columns, function () {
+            return $this->processor->processSelect($this, $this->runSelect());
+        }));
     }
 
     /**
@@ -636,7 +636,7 @@ class Builder
      *
      * @return array
      */
-    public function runSearch()
+    public function runSelect()
     {
         return $this->client->search(
             $this->toParam()
@@ -687,10 +687,4 @@ class Builder
 
         return $result;
     }
-
-    // ===========================================================
-    // 以下未确定版本
-    // ===========================================================
-
-    // =======================================================
 }

@@ -9,4 +9,18 @@ namespace Flc\Laravel\Elasticsearch\Query;
  */
 class Processor
 {
+    /**
+     * 格式化查询输出
+     *
+     * @param Builder $query
+     * @param array   $results
+     *
+     * @return array
+     */
+    public function processSelect(Builder $query, $results)
+    {
+        return array_map(function ($result) {
+            return (object) $result['_source'];
+        }, $results['hits']['hits']);
+    }
 }
