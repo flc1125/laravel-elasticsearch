@@ -458,7 +458,7 @@ class Builder
     }
 
     /**
-     * or where 查询
+     * or where 查询(whereShould 别名)
      *
      * @param string|Colsure|array $column
      * @param mixed                $operator
@@ -528,7 +528,11 @@ class Builder
     {
         return $this->whereNested(function ($query) use ($column, $method, $type) {
             foreach ($column as $key => $value) {
-                $query->$method($key, '=', $value, $type);
+                if (is_array($value)) {
+                    $query->$method(...$value);
+                } else {
+                    $query->$method($key, '=', $value, $type);
+                }
             }
         });
     }
