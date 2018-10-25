@@ -4,7 +4,6 @@ namespace Flc\Laravel\Elasticsearch\Query;
 
 use Closure;
 use Elasticsearch\Client as ElasticsearchClient;
-use Flc\Laravel\Elasticsearch\Grammars\Grammar;
 use Illuminate\Database\Concerns\BuildsQueries;
 use InvalidArgumentException;
 
@@ -23,9 +22,14 @@ class Builder
     public $client;
 
     /**
-     * @var \Flc\Laravel\Elasticsearch\Grammars\Grammar
+     * @var \Flc\Laravel\Elasticsearch\Query\Grammar
      */
     public $grammar;
+
+    /**
+     * @var \Flc\Laravel\Elasticsearch\Query\Processor
+     */
+    public $processor;
 
     /**
      * 索引名
@@ -83,18 +87,6 @@ class Builder
      */
     public $_source;
 
-    // /**
-    //  * All of the available clause operators.
-    //  *
-    //  * @var array
-    //  */
-    // public $operators = [
-    //     '=', '<', '>', '<=', '>=', '<>', '!=', '<=>',
-    //     'like', 'like binary', 'not like', 'ilike',
-    //     '&', '|', '^', '<<', '>>',
-    //     'rlike', 'regexp', 'not regexp',
-    // ];
-
     /**
      * 所有的区间查询配置
      *
@@ -110,10 +102,11 @@ class Builder
      * @param ElasticsearchClient $client
      * @param Grammar             $grammar
      */
-    public function __construct(ElasticsearchClient $client, Grammar $grammar)
+    public function __construct(ElasticsearchClient $client, Grammar $grammar, Processor $processor)
     {
-        $this->client  = $client;
-        $this->grammar = $grammar;
+        $this->client    = $client;
+        $this->grammar   = $grammar;
+        $this->processor = $processor;
     }
 
     /**
@@ -251,7 +244,7 @@ class Builder
      */
     public function newQuery()
     {
-        return new static($this->client, $this->grammar);
+        return new static($this->client, $this->grammar, $this->processor);
     }
 
     /**

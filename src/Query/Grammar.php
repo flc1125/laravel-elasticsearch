@@ -1,8 +1,6 @@
 <?php
 
-namespace Flc\Laravel\Elasticsearch\Grammars;
-
-use Flc\Laravel\Elasticsearch\Query\Builder;
+namespace Flc\Laravel\Elasticsearch\Query;
 
 /**
  * Elasticsearch 语法转换
