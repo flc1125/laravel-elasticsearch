@@ -20,12 +20,12 @@ class Builder
     /**
      * @var \Elasticsearch\Client
      */
-    protected $client;
+    public $client;
 
     /**
      * @var \Flc\Laravel\Elasticsearch\Grammars\Grammar
      */
-    protected $grammar;
+    public $grammar;
 
     /**
      * 索引名
@@ -626,18 +626,24 @@ class Builder
         }
     }
 
-    // ===========================================================
-    // 以下未确定版本
-    // ===========================================================
-
-    // =======================================================
-
     /*
      * 返回数据
      *
      * @return Collection
      */
-    public function get()
+    public function get($columns = ['*'])
+    {
+        return $this->onceWithColumns($columns, function () {
+            return $this->runSearch();
+        });
+    }
+
+    /**
+     * 执行搜索
+     *
+     * @return array
+     */
+    public function runSearch()
     {
         return $this->client->search(
             $this->toParam()
@@ -645,96 +651,53 @@ class Builder
     }
 
     /**
-     * 转换为请求参数
+     * 获取转换为请求参数
      *
      * @return array
      */
     public function toParam()
     {
-        return $this->compileSelect();
+        return $this->grammar->compileSelect($this);
     }
 
     /**
-     * 转换为查询 body
+     * 获取请求的 body 参数
      *
      * @return array
      */
     public function toBody()
     {
-        return $this->compileSelectBody();
+        return $this->grammar->compileBody($this);
     }
 
     /**
-     * ==========================
-     * 语法构建
-     * ==========================
-     */
-
-    /**
-     * 返回查询语法
+     * 执行一个获取指定字段的回调函数（拷贝 Laravel 官方）
      *
-     * @return array
-     */
-    protected function compileSelect()
-    {
-        $query = $this->baseQuery();
-
-        if (! is_null($this->_source)) {
-            $query['_source'] = $this->_source;
-        }
-
-        if (! is_null($this->from)) {
-            $query['from'] = $this->from;
-        }
-
-        if (! is_null($this->size)) {
-            $query['size'] = $this->size;
-        }
-
-        if ($body = $this->compileSelectBody()) {
-            $query['body'] = $body;
-        }
-
-        print_r($query);
-
-        return $query;
-    }
-
-    /**
-     * 返回查询 body 语法
+     * 执行完回调后，当前类的字段属性，会重置为原有配置值
      *
-     * @return array
-     */
-    protected function compileSelectBody()
-    {
-        $body = [];
-
-        if (count($this->sort) > 0) {
-            $body['sort'] = $this->sort;
-        }
-
-        if ($bool = $this->grammar->compileWheres($this)) {
-            $body['query']['bool'] = $bool;
-        }
-
-        return $body;
-    }
-
-    /**
-     * 返回基础公共查询
+     * @param array    $columns
+     * @param callable $callback
      *
-     * @return array
+     * @return mixed
      */
-    protected function baseQuery()
+    protected function onceWithColumns($columns, $callback)
     {
-        $query = [];
+        $original = $this->_source;
 
-        $query['index'] = $this->index;
-
-        if (! is_null($this->type)) {
-            $query['type'] = $this->type;
+        if (is_null($original)) {
+            $this->_source = $columns;
         }
 
-        return $query;
+        $result = $callback();
+
+        $this->_source = $original;
+
+        return $result;
     }
+
+    // ===========================================================
+    // 以下未确定版本
+    // ===========================================================
+
+    // =======================================================
 }
