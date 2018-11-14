@@ -637,6 +637,13 @@ class Builder
         }));
     }
 
+    protected function getForSelectResult($result)
+    {
+        return collect(
+            $this->processor->processSelect($this, $result)
+        );
+    }
+
     /**
      * 执行搜索
      *
