@@ -41,6 +41,7 @@ Elasticsearch::index('users')
 ## TODO
 
 - [ ] 聚合查询
+- [ ] 写入、更新、删除文档
 - [ ] 原生支持
 - [ ] 辅助方法
 

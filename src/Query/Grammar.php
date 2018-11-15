@@ -10,13 +10,13 @@ namespace Flc\Laravel\Elasticsearch\Query;
 class Grammar
 {
     /**
-     * 返回查询的参数
+     * 返回搜索的参数
      *
      * @param Builder $query
      *
      * @return array
      */
-    public function compileSelect(Builder $query)
+    public function compileSearch(Builder $query)
     {
         $params = $this->compileBase($query);
 
@@ -36,7 +36,7 @@ class Grammar
             $params['body'] = $body;
         }
 
-        print_r($params);
+        // print_r($params);
 
         return $params;
     }

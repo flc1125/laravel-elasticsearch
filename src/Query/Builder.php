@@ -7,6 +7,7 @@ use Elasticsearch\Client as ElasticsearchClient;
 use Flc\Laravel\Elasticsearch\Concerns\BuildsQueries;
 use Illuminate\Pagination\Paginator;
 use InvalidArgumentException;
+use RuntimeException;
 
 /**
  * Elasticsearch 查询构建类
@@ -655,18 +656,18 @@ class Builder
     public function runSearch()
     {
         return $this->client->search(
-            $this->toParam()
+            $this->toSearch()
         );
     }
 
     /**
-     * 获取转换为请求参数
+     * 获取转换为搜索请求参数
      *
      * @return array
      */
-    public function toParam()
+    public function toSearch()
     {
-        return $this->grammar->compileSelect($this);
+        return $this->grammar->compileSearch($this);
     }
 
     /**
@@ -727,6 +728,19 @@ class Builder
             'path'     => Paginator::resolveCurrentPath(),
             'pageName' => $pageName,
         ]);
+    }
+
+    /**
+     * Throw an exception if the query doesn't have an orderBy clause.
+     *
+     *
+     * @throws \RuntimeException
+     */
+    protected function enforceOrderBy()
+    {
+        if (empty($this->sort)) {
+            throw new RuntimeException('You must specify an orderBy clause when using this function.');
+        }
     }
 
     // 以下为不确定数据
