@@ -4,9 +4,9 @@ namespace Flc\Laravel\Elasticsearch\Query;
 
 use Closure;
 use Elasticsearch\Client as ElasticsearchClient;
-use Illuminate\Database\Concerns\BuildsQueries;
-use InvalidArgumentException;
+use Flc\Laravel\Elasticsearch\Concerns\BuildsQueries;
 use Illuminate\Pagination\Paginator;
+use InvalidArgumentException;
 
 /**
  * Elasticsearch 查询构建类
@@ -26,11 +26,6 @@ class Builder
      * @var \Flc\Laravel\Elasticsearch\Query\Grammar
      */
     public $grammar;
-
-    /**
-     * @var \Flc\Laravel\Elasticsearch\Query\Processor
-     */
-    public $processor;
 
     /**
      * 索引名
@@ -108,11 +103,10 @@ class Builder
      * @param ElasticsearchClient $client
      * @param Grammar             $grammar
      */
-    public function __construct(ElasticsearchClient $client, Grammar $grammar, Processor $processor)
+    public function __construct(ElasticsearchClient $client, Grammar $grammar)
     {
-        $this->client    = $client;
-        $this->grammar   = $grammar;
-        $this->processor = $processor;
+        $this->client  = $client;
+        $this->grammar = $grammar;
     }
 
     /**
@@ -250,7 +244,7 @@ class Builder
      */
     public function newQuery()
     {
-        return new static($this->client, $this->grammar, $this->processor);
+        return new static($this->client, $this->grammar);
     }
 
     /**
@@ -625,23 +619,32 @@ class Builder
         }
     }
 
-    /*
-     * 返回数据
+    /**
+     * 返回搜索数据集
      *
-     * @return Collection
+     * @param array $columns
+     *
+     * @return \Flc\Laravel\Elasticsearch\Collections\SearchCollection
+     */
+    public function search($columns = ['*'])
+    {
+        return $this->onceWithColumn($columns, function () {
+            return $this->searchCollection(
+                $this->runSearch()
+            );
+        });
+    }
+
+    /**
+     * 返回数据结果
+     *
+     * @param array $columns
+     *
+     * @return \Illuminate\Support\Collection
      */
     public function get($columns = ['*'])
     {
-        return collect($this->onceWithColumn($columns, function () {
-            return $this->processor->processSelect($this, $this->runSelect());
-        }));
-    }
-
-    protected function getForSelectResult($result)
-    {
-        return collect(
-            $this->processor->processSelect($this, $result)
-        );
+        return $this->search($columns)->source();
     }
 
     /**
@@ -649,7 +652,7 @@ class Builder
      *
      * @return array
      */
-    public function runSelect()
+    public function runSearch()
     {
         return $this->client->search(
             $this->toParam()
@@ -701,44 +704,30 @@ class Builder
         return $result;
     }
 
-    // 以下为不确定数据
-
     /**
-     * 执行指标聚合查询
+     * 分页查询
      *
-     * @param  string $function 指标类型：avg/max/min/sum/
-     * @param  string  $column 字段
-     * @return int
+     * @param int      $perPage
+     * @param array    $columns
+     * @param string   $pageName
+     * @param int|null $page
+     *
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function aggregate($function, $column)
+    public function paginate($perPage = 15, $columns = ['*'], $pageName = 'page', $page = null)
     {
-        $this->aggs[$column] = $function;
+        $page = $page ?: Paginator::resolveCurrentPage($pageName);
 
-        return $this->processor->processAggregateFunction(
-            $this, $this->runSelect(), $function
-        );
+        $searchCollection = $this->forPage($page, $perPage)->search($columns);
+
+        $total   = $searchCollection->total();
+        $results = $total ? $searchCollection->source() : collect();
+
+        return $this->paginator($results, $total, $perPage, $page, [
+            'path'     => Paginator::resolveCurrentPath(),
+            'pageName' => $pageName,
+        ]);
     }
 
-    // /**
-    //  * 分页查询
-    //  *
-    //  * @param  int  $perPage
-    //  * @param  array  $columns
-    //  * @param  string  $pageName
-    //  * @param  int|null  $page
-    //  * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
-    //  */
-    // public function paginate($perPage = 15, $columns = ['*'], $pageName = 'page', $page = null)
-    // {
-    //     $page = $page ?: Paginator::resolveCurrentPage($pageName);
-
-    //     $total = $this->getCountForPagination($columns);
-
-    //     $results = $total ? $this->forPage($page, $perPage)->get($columns) : collect();
-
-    //     return $this->paginator($results, $total, $perPage, $page, [
-    //         'path' => Paginator::resolveCurrentPath(),
-    //         'pageName' => $pageName,
-    //     ]);
-    // }
+    // 以下为不确定数据
 }

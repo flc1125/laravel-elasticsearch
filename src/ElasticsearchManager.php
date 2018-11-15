@@ -4,7 +4,6 @@ namespace Flc\Laravel\Elasticsearch;
 
 use Elasticsearch\ClientBuilder;
 use Flc\Laravel\Elasticsearch\Query\Grammar;
-use Flc\Laravel\Elasticsearch\Query\Processor;
 use InvalidArgumentException;
 
 /**
@@ -111,8 +110,7 @@ class ElasticsearchManager
             ClientBuilder::create()
                 ->setHosts($config['host'])
                 ->build(),
-            new Grammar(),
-            new Processor()
+            new Grammar()
         );
     }
 
