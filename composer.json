@@ -20,8 +20,11 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Flc\\Laravel\\Elasticsearch\\FilesystemServiceProvider"
-            ]
+                "Flc\\Laravel\\Elasticsearch\\ElasticsearchServiceProvider"
+            ],
+            "aliases": {
+                "Elasticsearch": "Flc\\Laravel\\Elasticsearch\\Facades\\Elasticsearch"
+            }
         }
     }
 }
