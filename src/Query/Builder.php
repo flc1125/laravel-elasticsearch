@@ -153,6 +153,20 @@ class Builder
     }
 
     /**
+     * 追加排序规则
+     *
+     * @param mixed $value
+     *
+     * @return $this
+     */
+    public function addOrder($value)
+    {
+        $this->sort[] = $value;
+
+        return $this;
+    }
+
+    /**
      * 按自定字段排序
      *
      * @param string $column
@@ -162,11 +176,9 @@ class Builder
      */
     public function orderBy($column, $direction = 'asc')
     {
-        $this->sort[] = [
+        return $this->addOrder([
             $column => strtolower($direction) == 'asc' ? 'asc' : 'desc',
-        ];
-
-        return $this;
+        ]);
     }
 
     /**
