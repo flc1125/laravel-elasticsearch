@@ -26,5 +26,8 @@
                 "Elasticsearch": "Flc\\Laravel\\Elasticsearch\\Facades\\Elasticsearch"
             }
         }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~7.0"
     }
 }
