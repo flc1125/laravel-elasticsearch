@@ -2,9 +2,9 @@
 
 namespace Flc\Laravel\Elasticsearch;
 
-use Elasticsearch\Client as ElasticsearchClient;
 use Flc\Laravel\Elasticsearch\Query\Builder;
 use Flc\Laravel\Elasticsearch\Query\Grammar;
+use Elasticsearch\Client as ElasticsearchClient;
 
 /**
  * Elasticsearch 连接
@@ -31,7 +31,7 @@ class ElasticsearchConnection
      */
     public function __construct(ElasticsearchClient $client, Grammar $grammar)
     {
-        $this->client  = $client;
+        $this->client = $client;
         $this->grammar = $grammar;
     }
 

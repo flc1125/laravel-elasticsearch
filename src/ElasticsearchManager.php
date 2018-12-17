@@ -2,9 +2,9 @@
 
 namespace Flc\Laravel\Elasticsearch;
 
+use InvalidArgumentException;
 use Elasticsearch\ClientBuilder;
 use Flc\Laravel\Elasticsearch\Query\Grammar;
-use InvalidArgumentException;
 
 /**
  * Elasticsearch Manager
