@@ -3,11 +3,11 @@
 namespace Flc\Laravel\Elasticsearch\Query;
 
 use Closure;
+use RuntimeException;
+use InvalidArgumentException;
+use Illuminate\Pagination\Paginator;
 use Elasticsearch\Client as ElasticsearchClient;
 use Flc\Laravel\Elasticsearch\Concerns\BuildsQueries;
-use Illuminate\Pagination\Paginator;
-use InvalidArgumentException;
-use RuntimeException;
 
 /**
  * Elasticsearch 查询构建类
@@ -106,7 +106,7 @@ class Builder
      */
     public function __construct(ElasticsearchClient $client, Grammar $grammar)
     {
-        $this->client  = $client;
+        $this->client = $client;
         $this->grammar = $grammar;
     }
 
@@ -574,7 +574,7 @@ class Builder
      * @param Builder $query
      * @param string  $type
      */
-    public function addNestedWhereQuery(Builder $query, $type = 'filter')
+    public function addNestedWhereQuery(self $query, $type = 'filter')
     {
         if ($bool = $query->grammar->compileWheres($query)) {
             $this->addWhere(
@@ -733,7 +733,7 @@ class Builder
 
         $searchCollection = $this->forPage($page, $perPage)->search($columns);
 
-        $total   = $searchCollection->total();
+        $total = $searchCollection->total();
         $results = $total ? $searchCollection->source() : collect();
 
         return $this->paginator($results, $total, $perPage, $page, [
