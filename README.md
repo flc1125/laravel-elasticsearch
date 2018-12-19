@@ -1,7 +1,5 @@
 # Laravel - Elasticsearch
 
-debug 中，请勿用于生产
-
 ## 安装
 
 ```bash
