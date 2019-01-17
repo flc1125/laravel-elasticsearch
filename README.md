@@ -8,7 +8,7 @@ composer require flc/laravel-elasticsearch
 
 ## 配置
 
-> 待整理
+[使用文档](https://docs.flc.io/elasticsearch/laravel-elasticsearch/introduction/)
 
 ## 示例
 
