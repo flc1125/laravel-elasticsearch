@@ -1,6 +1,6 @@
 {
     "name": "flc/laravel-elasticsearch",
-    "description": "Laravel Elasticsearch (进行中，请勿用于生产）",
+    "description": "Laravel Elasticsearch 构建类",
     "type": "library",
     "license": "MIT",
     "authors": [
