@@ -1,5 +1,10 @@
 # Laravel - Elasticsearch
 
+[![Latest Stable Version](https://poser.pugx.org/flc/laravel-elasticsearch/v/stable)](https://packagist.org/packages/flc/laravel-elasticsearch)
+[![Total Downloads](https://poser.pugx.org/flc/laravel-elasticsearch/downloads)](https://packagist.org/packages/flc/laravel-elasticsearch)
+[![License](https://poser.pugx.org/flc/laravel-elasticsearch/license)](https://packagist.org/packages/flc/laravel-elasticsearch)
+[![996.icu](https://img.shields.io/badge/link-996.icu-red.svg)](https://996.icu)
+
 ## 安装
 
 ```bash
