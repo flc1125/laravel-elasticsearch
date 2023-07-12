@@ -16,7 +16,7 @@ class Grammar
      *
      * @return array
      */
-    public function compileSearch(Builder $query)
+    public function compileSearch(Builder $query): array
     {
         $params = $this->compileBase($query);
 
@@ -46,7 +46,7 @@ class Grammar
      *
      * @return array
      */
-    public function compileBody(Builder $query)
+    public function compileBody(Builder $query): array
     {
         $body = [];
 
@@ -68,7 +68,7 @@ class Grammar
      *
      * @return array
      */
-    public function compileBase(Builder $query)
+    public function compileBase(Builder $query): array
     {
         $params = [];
 
@@ -88,7 +88,7 @@ class Grammar
      *
      * @return array
      */
-    public function compileWheres(Builder $query)
+    public function compileWheres(Builder $query): array
     {
         $wheres = [];
 
