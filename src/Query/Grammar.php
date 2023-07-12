@@ -36,8 +36,6 @@ class Grammar
             $params['body'] = $body;
         }
 
-        // print_r($params);
-
         return $params;
     }
 

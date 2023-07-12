@@ -572,7 +572,8 @@ class Builder
      * 将嵌套的查询构建条件加入到查询中
      *
      * @param Builder $query
-     * @param string  $type
+     * @param string $type
+     * @return Builder
      */
     public function addNestedWhereQuery(self $query, $type = 'filter')
     {
@@ -754,6 +755,4 @@ class Builder
             throw new RuntimeException('You must specify an orderBy clause when using this function.');
         }
     }
-
-    // 以下为不确定数据
 }

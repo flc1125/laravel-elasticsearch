@@ -10,7 +10,13 @@
         }
     ],
     "require": {
-        "elasticsearch/elasticsearch": "~6.0"
+        "elasticsearch/elasticsearch": "^6.0|^7.0",
+        "illuminate/support": "^5.0|^6.0|^7.0|^8.0|^9.0|^10.0"
+    },
+    "require-dev": {
+        "pestphp/pest": "^2.8",
+        "laravel/framework": "^5.0|^6.0|^7.0|^8.0|^9.0|^10.0",
+        "friendsofphp/php-cs-fixer": "^3.21"
     },
     "autoload": {
         "psr-4": {
@@ -25,6 +31,17 @@
             "aliases": {
                 "Elasticsearch": "Flc\\Laravel\\Elasticsearch\\Facades\\Elasticsearch"
             }
+        }
+    },
+    "scripts": {
+        "test": [
+            "vendor/bin/pest"
+        ]
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true
         }
     }
 }
