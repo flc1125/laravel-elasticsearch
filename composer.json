@@ -10,7 +10,7 @@
         }
     ],
     "require": {
-        "php":">=7.3",
+        "php": ">=7.3",
         "elasticsearch/elasticsearch": "^6.0|^7.0"
     },
     "require-dev": {
@@ -21,6 +21,11 @@
     "autoload": {
         "psr-4": {
             "Flc\\Laravel\\Elasticsearch\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flc\\Laravel\\Elasticsearch\\Tests\\": "tests/"
         }
     },
     "extra": {
@@ -34,9 +39,7 @@
         }
     },
     "scripts": {
-        "test": [
-            "vendor/bin/pest"
-        ]
+        "test": "vendor/bin/phpunit"
     },
     "config": {
         "allow-plugins": {

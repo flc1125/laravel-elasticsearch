@@ -11,7 +11,6 @@ return (new PhpCsFixer\Config())
         'no_useless_else'                   => true,
         'no_useless_return'                 => true,
         'php_unit_construct'                => true,
-        'php_unit_strict'                   => true,
         'yoda_style'                        => false,
         'phpdoc_summary'                    => false,
         'phpdoc_no_empty_return'            => false,
@@ -19,7 +18,7 @@ return (new PhpCsFixer\Config())
         'not_operator_with_successor_space' => true,
         'binary_operator_spaces'            => [
             'default' => 'align_single_space_minimal',
-        ], // 等号对齐、数字箭头符号对齐
+        ],
         'single_trait_insert_per_statement' => false,
         'blank_line_before_statement'       => ['statements' => ['declare']],
     ])
