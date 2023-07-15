@@ -39,5 +39,4 @@ jobs:
                     composer install --prefer-dist
 
             -   name: Unit tests
-                run: |
-                    composer test
+                run: vendor/bin/phpunit --testdox
