@@ -2,12 +2,9 @@
 
 namespace Flc\Laravel\Elasticsearch\Query;
 
-use Closure;
-use RuntimeException;
-use InvalidArgumentException;
-use Illuminate\Pagination\Paginator;
 use Elasticsearch\Client as ElasticsearchClient;
 use Flc\Laravel\Elasticsearch\Concerns\BuildsQueries;
+use Illuminate\Pagination\Paginator;
 
 /**
  * Elasticsearch 查询构建类
@@ -106,7 +103,7 @@ class Builder
      */
     public function __construct(ElasticsearchClient $client, Grammar $grammar)
     {
-        $this->client = $client;
+        $this->client  = $client;
         $this->grammar = $grammar;
     }
 
@@ -117,7 +114,7 @@ class Builder
      *
      * @return $this
      */
-    public function index($value)
+    public function index(string $value): Builder
     {
         $this->index = $value;
 
@@ -131,7 +128,7 @@ class Builder
      *
      * @return $this
      */
-    public function type($value)
+    public function type(string $value): Builder
     {
         $this->type = $value;
 
@@ -145,7 +142,7 @@ class Builder
      *
      * @return $this
      */
-    public function select($columns = ['*'])
+    public function select($columns = ['*']): Builder
     {
         $this->_source = is_array($columns) ? $columns : func_get_args();
 
@@ -159,7 +156,7 @@ class Builder
      *
      * @return $this
      */
-    public function addOrder($value)
+    public function addOrder($value): Builder
     {
         $this->sort[] = $value;
 
@@ -174,7 +171,7 @@ class Builder
      *
      * @return $this
      */
-    public function orderBy($column, $direction = 'asc')
+    public function orderBy(string $column, string $direction = 'asc'): Builder
     {
         return $this->addOrder([
             $column => strtolower($direction) == 'asc' ? 'asc' : 'desc',
@@ -188,7 +185,7 @@ class Builder
      *
      * @return $this
      */
-    public function skip($value)
+    public function skip(int $value): Builder
     {
         return $this->offset($value);
     }
@@ -200,7 +197,7 @@ class Builder
      *
      * @return $this
      */
-    public function offset($value)
+    public function offset(int $value): Builder
     {
         if ($value >= 0) {
             $this->from = $value;
@@ -216,7 +213,7 @@ class Builder
      *
      * @return $this
      */
-    public function take($value)
+    public function take(int $value): Builder
     {
         return $this->limit($value);
     }
@@ -228,7 +225,7 @@ class Builder
      *
      * @return $this
      */
-    public function limit($value)
+    public function limit(int $value): Builder
     {
         if ($value >= 0) {
             $this->size = $value;
@@ -245,7 +242,7 @@ class Builder
      *
      * @return $this
      */
-    public function forPage($page, $perPage = 15)
+    public function forPage(int $page, int $perPage = 15): Builder
     {
         return $this->skip(($page - 1) * $perPage)->take($perPage);
     }
@@ -255,7 +252,7 @@ class Builder
      *
      * @return \Flc\Laravel\Elasticsearch\Query\Builder
      */
-    public function newQuery()
+    public function newQuery(): Builder
     {
         return new static($this->client, $this->grammar);
     }
@@ -264,16 +261,16 @@ class Builder
      * 增加一个条件到查询中
      *
      * @param mixed  $value 条件语法
-     * @param string $type  条件类型，filter/must/must_not/should
-     *
-     * @throws \InvalidArgumentException
+     * @param string $type  条件类型, filter/must/must_not/should
      *
      * @return $this
+     *
+     * @throws \InvalidArgumentException
      */
-    public function addWhere($value, $type = 'filter')
+    public function addWhere($value, string $type = 'filter'): Builder
     {
         if (! array_key_exists($type, $this->wheres)) {
-            throw new InvalidArgumentException("Invalid where type: {$type}.");
+            throw new \InvalidArgumentException("Invalid where type: {$type}.");
         }
 
         $this->wheres[$type][] = $value;
@@ -290,7 +287,7 @@ class Builder
      *
      * @return $this
      */
-    public function whereTerm($column, $value, $type = 'filter')
+    public function whereTerm(string $column, $value, string $type = 'filter'): Builder
     {
         return $this->addWhere(
             ['term' => [$column => $value]], $type
@@ -306,7 +303,7 @@ class Builder
      *
      * @return $this
      */
-    public function whereTerms($column, array $value, $type = 'filter')
+    public function whereTerms(string $column, array $value, string $type = 'filter'): Builder
     {
         return $this->addWhere(
             ['terms' => [$column => $value]], $type
@@ -322,7 +319,7 @@ class Builder
      *
      * @return $this
      */
-    public function whereMatch($column, $value, $type = 'filter')
+    public function whereMatch(string $column, $value, string $type = 'filter'): Builder
     {
         return $this->addWhere(
             ['match' => [$column => $value]], $type
@@ -338,7 +335,7 @@ class Builder
      *
      * @return $this
      */
-    public function whereMatchPhrase($column, $value, $type = 'filter')
+    public function whereMatchPhrase(string $column, $value, string $type = 'filter'): Builder
     {
         return $this->addWhere(
             ['match_phrase' => [$column => $value]], $type
@@ -355,10 +352,10 @@ class Builder
      *
      * @return $this
      */
-    public function whereRange($column, $operator, $value, $type = 'filter')
+    public function whereRange(string $column, string $operator, $value, string $type = 'filter'): Builder
     {
         if (! array_key_exists($operator, $this->range_operators)) {
-            throw new InvalidArgumentException("Invalid operator: {$operator}.");
+            throw new \InvalidArgumentException("Invalid operator: {$operator}.");
         }
 
         return $this->addWhere([
@@ -377,7 +374,7 @@ class Builder
      *
      * @return $this
      */
-    public function whereBetween($column, array $value = [], $type = 'filter')
+    public function whereBetween(string $column, array $value = [], string $type = 'filter'): Builder
     {
         return $this->addWhere([
             'range' => [
@@ -397,7 +394,7 @@ class Builder
      *
      * @return $this
      */
-    public function whereExists($column, $type = 'filter')
+    public function whereExists(string $column, string $type = 'filter'): Builder
     {
         return $this->addWhere([
             'exists' => ['field' => $column],
@@ -411,7 +408,7 @@ class Builder
      *
      * @return $this
      */
-    public function whereNotExists($column)
+    public function whereNotExists(string $column): Builder
     {
         return $this->whereExists($column, 'must_not');
     }
@@ -423,7 +420,7 @@ class Builder
      *
      * @return $this
      */
-    public function whereNull($column)
+    public function whereNull(string $column): Builder
     {
         return $this->whereNotExists($column);
     }
@@ -431,14 +428,14 @@ class Builder
     /**
      * where 条件查询
      *
-     * @param string|Colsure|array $column
-     * @param mixed                $operator
-     * @param mixed                $value
-     * @param string               $type
+     * @param string|\Closure|array $column
+     * @param mixed                 $operator
+     * @param mixed                 $value
+     * @param string                $type
      *
      * @return $this
      */
-    public function where($column, $operator = null, $value = null, $type = 'filter')
+    public function where($column, $operator = null, $value = null, string $type = 'filter'): Builder
     {
         // 如果是数组
         if (is_array($column)) {
@@ -446,7 +443,7 @@ class Builder
         }
 
         // 如果 column 是匿名函数
-        if ($column instanceof Closure) {
+        if ($column instanceof \Closure) {
             return $this->whereNested(
                 $column, $type
             );
@@ -464,15 +461,15 @@ class Builder
     }
 
     /**
-     * or where 查询(whereShould 别名)
+     * Or where 查询(whereShould 别名)
      *
-     * @param string|Colsure|array $column
+     * @param string|Closure|array $column
      * @param mixed                $operator
      * @param mixed                $value
      *
      * @return $this
      */
-    public function orWhere($column, $operator = null, $value = null)
+    public function orWhere($column, $operator = null, $value = null): Builder
     {
         if (func_num_args() === 2) {
             list($value, $operator) = [$operator, '='];
@@ -490,7 +487,7 @@ class Builder
      *
      * @return $this
      */
-    public function whereIn($column, array $value, $type = 'filter')
+    public function whereIn(string $column, array $value, string $type = 'filter'): Builder
     {
         return $this->whereTerms($column, $value, $type);
     }
@@ -503,7 +500,7 @@ class Builder
      *
      * @return $this
      */
-    public function orWhereIn($column, array $value)
+    public function orWhereIn(string $column, array $value): Builder
     {
         return $this->whereIn($column, $value, 'should');
     }
@@ -516,7 +513,7 @@ class Builder
      *
      * @return $this
      */
-    public function whereNotIn($column, array $value)
+    public function whereNotIn(string $column, array $value): Builder
     {
         return $this->whereIn($column, $value, 'must_not');
     }
@@ -530,7 +527,7 @@ class Builder
      *
      * @return $this
      */
-    protected function addArrayOfWheres($column, $type, $method = 'where')
+    protected function addArrayOfWheres(array $column, string $type, string $method = 'where'): Builder
     {
         return $this->whereNested(function ($query) use ($column, $method, $type) {
             foreach ($column as $key => $value) {
@@ -546,12 +543,12 @@ class Builder
     /**
      * 嵌套查询
      *
-     * @param Closure $callback 回调函数
-     * @param string  $type     条件类型
+     * @param \Closure $callback 回调函数
+     * @param string   $type     条件类型
      *
      * @return $this
      */
-    public function whereNested(Closure $callback, $type = 'filter')
+    public function whereNested(\Closure $callback, string $type = 'filter'): Builder
     {
         call_user_func($callback, $query = $this->forNestedWhere());
 
@@ -573,8 +570,10 @@ class Builder
      *
      * @param Builder $query
      * @param string  $type
+     *
+     * @return Builder
      */
-    public function addNestedWhereQuery(self $query, $type = 'filter')
+    public function addNestedWhereQuery(self $query, string $type = 'filter'): Builder
     {
         if ($bool = $query->grammar->compileWheres($query)) {
             $this->addWhere(
@@ -593,42 +592,37 @@ class Builder
      * @param string $operator 符号
      * @param string $type     条件类型
      *
-     * @return array
+     * @return $this
      */
-    protected function performWhere($column, $value, $operator, $type = 'filter')
+    protected function performWhere(string $column, $value, string $operator, string $type = 'filter'): Builder
     {
         switch ($operator) {
             case '=':
                 return $this->whereTerm($column, $value, $type);
-                break;
 
             case '>':
             case '<':
             case '>=':
             case '<=':
                 return $this->whereRange($column, $operator, $value, $type);
-                break;
 
             case '!=':
             case '<>':
                 return $this->whereTerm($column, $value, 'must_not');
-                break;
 
             case 'match':
                 return $this->whereMatch($column, $value, $type);
-                break;
 
             case 'not match':
                 return $this->whereMatch($column, $value, 'must_not');
-                break;
 
             case 'like':
                 return $this->whereMatchPhrase($column, $value, $type);
-                break;
 
             case 'not like':
                 return $this->whereMatchPhrase($column, $value, 'must_not');
-                break;
+            default:
+                throw new \InvalidArgumentException('invalid argument');
         }
     }
 
@@ -639,7 +633,7 @@ class Builder
      *
      * @return \Flc\Laravel\Elasticsearch\Collections\SearchCollection
      */
-    public function search($columns = ['*'])
+    public function search(array $columns = ['*']): \Flc\Laravel\Elasticsearch\Collections\SearchCollection
     {
         return $this->onceWithColumn($columns, function () {
             return $this->searchCollection(
@@ -677,7 +671,7 @@ class Builder
      *
      * @return array
      */
-    public function toSearch()
+    public function toSearch(): array
     {
         return $this->grammar->compileSearch($this);
     }
@@ -687,7 +681,7 @@ class Builder
      *
      * @return array
      */
-    public function toBody()
+    public function toBody(): array
     {
         return $this->grammar->compileBody($this);
     }
@@ -727,13 +721,13 @@ class Builder
      *
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function paginate($perPage = 15, $columns = ['*'], $pageName = 'page', $page = null)
+    public function paginate(int $perPage = 15, array $columns = ['*'], string $pageName = 'page', $page = null): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
         $page = $page ?: Paginator::resolveCurrentPage($pageName);
 
         $searchCollection = $this->forPage($page, $perPage)->search($columns);
 
-        $total = $searchCollection->total();
+        $total   = $searchCollection->total();
         $results = $total ? $searchCollection->source() : collect();
 
         return $this->paginator($results, $total, $perPage, $page, [
@@ -745,15 +739,12 @@ class Builder
     /**
      * Throw an exception if the query doesn't have an orderBy clause.
      *
-     *
      * @throws \RuntimeException
      */
     protected function enforceOrderBy()
     {
         if (empty($this->sort)) {
-            throw new RuntimeException('You must specify an orderBy clause when using this function.');
+            throw new \RuntimeException('You must specify an orderBy clause when using this function.');
         }
     }
-
-    // 以下为不确定数据
 }

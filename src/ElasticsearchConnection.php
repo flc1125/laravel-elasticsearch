@@ -56,7 +56,7 @@ class ElasticsearchConnection
      *
      * @return \Flc\Laravel\Elasticsearch\Query\Builder
      */
-    public function builder()
+    public function builder(): Builder
     {
         return new Builder(
             $this->client, $this->grammar
@@ -67,11 +67,11 @@ class ElasticsearchConnection
      * Dynamically pass methods to the default connection.
      *
      * @param string $method
-     * @param array  $parameters
+     * @param array $parameters
      *
      * @return mixed
      */
-    public function __call($method, $parameters)
+    public function __call(string $method, array $parameters)
     {
         return $this->client->$method(...$parameters);
     }

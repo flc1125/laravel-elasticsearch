@@ -16,7 +16,7 @@ class Grammar
      *
      * @return array
      */
-    public function compileSearch(Builder $query)
+    public function compileSearch(Builder $query): array
     {
         $params = $this->compileBase($query);
 
@@ -36,8 +36,6 @@ class Grammar
             $params['body'] = $body;
         }
 
-        // print_r($params);
-
         return $params;
     }
 
@@ -48,7 +46,7 @@ class Grammar
      *
      * @return array
      */
-    public function compileBody(Builder $query)
+    public function compileBody(Builder $query): array
     {
         $body = [];
 
@@ -70,11 +68,15 @@ class Grammar
      *
      * @return array
      */
-    public function compileBase(Builder $query)
+    public function compileBase(Builder $query): array
     {
-        $params = [];
+        if (is_null($query->index)) {
+            throw new \InvalidArgumentException('The index is required.');
+        }
 
-        $params['index'] = $query->index;
+        $params = [
+            'index' => $query->index,
+        ];
 
         if (! is_null($query->type)) {
             $params['type'] = $query->type;
@@ -90,7 +92,7 @@ class Grammar
      *
      * @return array
      */
-    public function compileWheres(Builder $query)
+    public function compileWheres(Builder $query): array
     {
         $wheres = [];
 

@@ -21,7 +21,7 @@ trait BuildsQueries
      *
      * @return \Flc\Laravel\Elasticsearch\Collections\SearchCollection
      */
-    protected function searchCollection($result = [])
+    protected function searchCollection(array $result = []): SearchCollection
     {
         return new SearchCollection($result);
     }

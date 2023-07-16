@@ -2,7 +2,6 @@
 
 namespace Flc\Laravel\Elasticsearch;
 
-use InvalidArgumentException;
 use Elasticsearch\ClientBuilder;
 use Flc\Laravel\Elasticsearch\Query\Grammar;
 
@@ -40,11 +39,11 @@ class ElasticsearchManager
     /**
      * 获取一个单例连接
      *
-     * @param string $name
+     * @param string|null $name
      *
      * @return \Flc\Laravel\Elasticsearch\ElasticsearchConnection
      */
-    public function connection($name = null)
+    public function connection($name = null): ElasticsearchConnection
     {
         $name = $name ?? $this->getDefaultConnection();
 
@@ -60,7 +59,7 @@ class ElasticsearchManager
      *
      * @return string
      */
-    protected function getDefaultConnection()
+    protected function getDefaultConnection(): string
     {
         return $this->app['config']['elasticsearch.default'];
     }
@@ -70,9 +69,9 @@ class ElasticsearchManager
      *
      * @param string $name
      *
-     * @return ElastisearchClient
+     * @return ElasticsearchConnection
      */
-    protected function resolve($name)
+    protected function resolve(string $name): ElasticsearchConnection
     {
         $config = $this->getConfig($name);
 
@@ -86,12 +85,12 @@ class ElasticsearchManager
      *
      * @return array
      */
-    protected function getConfig($name)
+    protected function getConfig(string $name): array
     {
         $connections = $this->app['config']['elasticsearch.connections'];
 
         if (! isset($connections[$name])) {
-            throw new InvalidArgumentException("Elasticsearch [{$name}] not configured.");
+            throw new \InvalidArgumentException("Elasticsearch [{$name}] not configured.");
         }
 
         return $connections[$name];
@@ -104,7 +103,7 @@ class ElasticsearchManager
      *
      * @return \Flc\Laravel\Elasticsearch\ElasticsearchConnection
      */
-    protected function makeConnection($config)
+    protected function makeConnection(array $config): ElasticsearchConnection
     {
         return new ElasticsearchConnection(
             ClientBuilder::create()
@@ -122,7 +121,7 @@ class ElasticsearchManager
      *
      * @return mixed
      */
-    public function __call($method, $parameters)
+    public function __call(string $method, array $parameters)
     {
         return $this->connection()->$method(...$parameters);
     }
