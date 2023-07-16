@@ -1,9 +1,8 @@
 <?php
 
-namespace Flc\Laravel\Elasticsearch\Tests\Other;
+namespace Flc\Laravel\Elasticsearch\Tests;
 
 use Elasticsearch\Client;
-use Flc\Laravel\Elasticsearch\Tests\TestCase;
 
 class ElasticsearchClientTest extends TestCase
 {

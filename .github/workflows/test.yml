@@ -12,7 +12,6 @@ jobs:
                 php-version: [ 7.3, 7.4, 8.0, 8.1, 8.2 ]
                 os: [ ubuntu-latest ]
                 es-version: [ 8.9-SNAPSHOT ]
-                laravel-version: [ ^5.0, ^6.0, ^7.0, ^8.0, ^9.0, ^10.0 ]
 
         steps:
             -   name: Checkout
@@ -22,7 +21,7 @@ jobs:
                 uses: shivammathur/setup-php@v2
                 with:
                     php-version: ${{ matrix.php-version }}
-                    extensions: yaml, zip, curl
+                    extensions: yaml, zip, curl, yaml, mcrypt
                     coverage: none
 
             -   name: Get composer cache directory
@@ -32,14 +31,11 @@ jobs:
                 uses: actions/cache@v3
                 with:
                     path: ${{ steps.composer-cache.outputs.dir }}
-                    key: ${{ runner.os }}-php-${{ matrix.php-version }}-laravel-${{ matrix.laravel-version }}-${{ hashFiles('**/composer.json') }}
-                    restore-keys: ${{ runner.os }}-php-${{ matrix.php-version }}-laravel-${{ matrix.laravel-version }}-
+                    key: ${{ runner.os }}-php-${{ matrix.php-version }}-${{ hashFiles('**/composer.json') }}
+                    restore-keys: ${{ runner.os }}-php-${{ matrix.php-version }}-
 
             -   name: Install dependencies
                 run: composer install --prefer-dist
-
-            -   name: Install laravel version
-                run: composer require "laravel/framework:${{ matrix.laravel-version }}" --prefer-dist --no-interaction --no-suggest
 
             -   name: Unit tests
                 run: composer test
