@@ -2,14 +2,16 @@
 
 namespace Flc\Laravel\Elasticsearch\Tests;
 
-use Elasticsearch\Client;
 use Flc\Laravel\Elasticsearch\ElasticsearchConnection;
 use Flc\Laravel\Elasticsearch\Query\Builder;
 use Flc\Laravel\Elasticsearch\Query\Grammar;
+use Flc\Laravel\Elasticsearch\Tests\Traits\WithElasticsearchClient;
 use PHPUnit\Framework\TestCase;
 
 class ElasticsearchConnectionTest extends TestCase
 {
+    use WithElasticsearchClient;
+
     protected $connection;
 
     public function setUp(): void
@@ -17,16 +19,7 @@ class ElasticsearchConnectionTest extends TestCase
         parent::setUp();
 
         $this->connection = new ElasticsearchConnection(
-            $this->setupClient(), new Grammar());
-    }
-
-    protected function setupClient()
-    {
-        $client = \Mockery::mock(Client::class);
-        $client->allows()->index(['test'])->andReturn([]);
-        $client->allows()->search(['test'])->andReturn([]);
-
-        return $client;
+            $this->withElasticsearchClient(), new Grammar());
     }
 
     public function testConnection()

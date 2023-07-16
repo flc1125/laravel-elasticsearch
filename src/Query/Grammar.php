@@ -70,9 +70,13 @@ class Grammar
      */
     public function compileBase(Builder $query): array
     {
-        $params = [];
+        if (is_null($query->index)) {
+            throw new \InvalidArgumentException('The index is required.');
+        }
 
-        $params['index'] = $query->index;
+        $params = [
+            'index' => $query->index,
+        ];
 
         if (! is_null($query->type)) {
             $params['type'] = $query->type;
