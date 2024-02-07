@@ -19,7 +19,7 @@ trait BuildsQueries
      *
      * @param array $result
      *
-     * @return \Flc\Laravel\Elasticsearch\Collections\SearchCollection
+     * @return SearchCollection
      */
     protected function searchCollection(array $result = []): SearchCollection
     {

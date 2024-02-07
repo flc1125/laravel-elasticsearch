@@ -31,7 +31,17 @@ class SearchCollection
      */
     public function total(): int
     {
-        return $this->result['hits']['total'] ?? 0;
+        return $this->result['hits']['total']['value'] ?? 0;
+    }
+
+    /**
+     * 返回总记录数信息
+     *
+     * @return array
+     */
+    public function totalObj(): array
+    {
+        return $this->result['hits']['total'];
     }
 
     /**

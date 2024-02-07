@@ -16,12 +16,12 @@ class Builder
     use BuildsQueries;
 
     /**
-     * @var \Elasticsearch\Client
+     * @var ElasticsearchClient
      */
     public $client;
 
     /**
-     * @var \Flc\Laravel\Elasticsearch\Query\Grammar
+     * @var Grammar
      */
     public $grammar;
 
@@ -38,6 +38,13 @@ class Builder
      * @var string
      */
     public $type;
+
+    /**
+     * 是否返回实际命中的文档数
+     *
+     * @var bool
+     */
+    public $trackTotalHits = true;
 
     /**
      * 搜寻条件
@@ -117,6 +124,22 @@ class Builder
     public function index(string $value): Builder
     {
         $this->index = $value;
+
+        return $this;
+    }
+
+    /**
+     * 是否返回实际命中的文档数
+     *
+     * @param bool $value 是否返回实际文档数，true-返回实际命中的文档数，false-不返回实际命中的文档数
+     *
+     * @note 如设置 false ，当结果文档数超过 10000 时，返回的结果中的 total 字段将不再返回实际命中的文档数，最大返回 10000
+     *
+     * @return $this
+     */
+    public function trackTotalHits(bool $value = true): Builder
+    {
+        $this->trackTotalHits = $value;
 
         return $this;
     }
@@ -250,7 +273,7 @@ class Builder
     /**
      * 返回新的构建类
      *
-     * @return \Flc\Laravel\Elasticsearch\Query\Builder
+     * @return Builder
      */
     public function newQuery(): Builder
     {
