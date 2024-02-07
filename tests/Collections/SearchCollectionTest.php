@@ -14,7 +14,10 @@ class SearchCollectionTest extends TestCase
             [
                 'args' => [
                     'hits' => [
-                        'total' => 100,
+                        'total' => [
+                            'value'    => 100,
+                            'relation' => 'eq',
+                        ],
                     ],
                 ],
                 'want' => 100,
@@ -22,7 +25,10 @@ class SearchCollectionTest extends TestCase
             [
                 'args' => [
                     'hits' => [
-                        'total' => 200,
+                        'total' => [
+                            'value'    => 200,
+                            'relation' => 'eq',
+                        ],
                     ],
                 ],
                 'want' => 200,
