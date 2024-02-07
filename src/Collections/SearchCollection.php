@@ -35,7 +35,7 @@ class SearchCollection
     }
 
     /**
-     * 返回总记录数
+     * 返回总记录数信息
      *
      * @return array
      */
