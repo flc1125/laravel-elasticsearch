@@ -14,7 +14,7 @@ composer require flc/laravel-elasticsearch
 
 ## 说明
 
-v1.2.0 版本开始仅支持 Elasticsearch 7.x 版本，扩展依赖 elasticsearch/elasticsearch ^7.0 ，如使用 Elasticsearch 6.x 请使用 v1.1.0 版本。 
+v2.0.0 版本开始仅支持 Elasticsearch 7.x 版本，扩展依赖 elasticsearch/elasticsearch ^7.0 ，如使用 Elasticsearch 6.x 请使用 v1.1.0 版本。 
 
 ## 版本矩阵
 

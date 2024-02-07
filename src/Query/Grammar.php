@@ -20,7 +20,7 @@ class Grammar
     {
         $params = $this->compileBase($query);
 
-        // 搜索返回实际命中的文档数
+        // 搜索是否返回实际命中的文档数
         if (! empty($query->trackTotalHits)) {
             $params['track_total_hits'] = true;
         }

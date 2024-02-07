@@ -129,17 +129,17 @@ class Builder
     }
 
     /**
-     * 关闭返回实际命中的文档数
+     * 是否返回实际命中的文档数
      *
-     * @note 如使用该方法，当结果文档数超过 10000 时，
-     * 注意返回的结果中的 total 字段将不再返回实际命中的文档数，
-     * 最大返回 10000
+     * @param bool $value 是否返回实际文档数，true-返回实际命中的文档数，false-不返回实际命中的文档数
+     *
+     * @note 如设置 false ，当结果文档数超过 10000 时，返回的结果中的 total 字段将不再返回实际命中的文档数，最大返回 10000
      *
      * @return $this
      */
-    public function disableTrackTotalHits(): Builder
+    public function trackTotalHits(bool $value = true): Builder
     {
-        $this->trackTotalHits = false;
+        $this->trackTotalHits = $value;
 
         return $this;
     }
