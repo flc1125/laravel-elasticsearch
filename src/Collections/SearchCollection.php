@@ -31,7 +31,7 @@ class SearchCollection
      */
     public function total(): int
     {
-        return $this->result['hits']['total'] ?? 0;
+        return $this->result['hits']['total']['value'] ?? 0;
     }
 
     /**
