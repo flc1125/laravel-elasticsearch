@@ -41,7 +41,7 @@ class ElasticsearchManager
      *
      * @param string|null $name
      *
-     * @return \Flc\Laravel\Elasticsearch\ElasticsearchConnection
+     * @return ElasticsearchConnection
      */
     public function connection($name = null): ElasticsearchConnection
     {
@@ -101,7 +101,7 @@ class ElasticsearchManager
      *
      * @param array $config
      *
-     * @return \Flc\Laravel\Elasticsearch\ElasticsearchConnection
+     * @return ElasticsearchConnection
      */
     protected function makeConnection(array $config): ElasticsearchConnection
     {

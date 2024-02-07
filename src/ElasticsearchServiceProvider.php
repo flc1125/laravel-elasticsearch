@@ -2,9 +2,9 @@
 
 namespace Flc\Laravel\Elasticsearch;
 
+use Illuminate\Foundation\Application as LaravelApplication;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Lumen\Application as LumenApplication;
-use Illuminate\Foundation\Application as LaravelApplication;
 
 /**
  * Elasticsearch 服务者

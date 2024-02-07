@@ -35,6 +35,16 @@ class SearchCollection
     }
 
     /**
+     * 返回总记录数
+     *
+     * @return array
+     */
+    public function totalObj(): array
+    {
+        return $this->result['hits']['total'];
+    }
+
+    /**
      * 返回 source 集合
      *
      * @return \Illuminate\Support\Collection
