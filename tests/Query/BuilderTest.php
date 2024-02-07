@@ -29,7 +29,8 @@ class BuilderTest extends TestCase
     public function testIndex()
     {
         $this->assertSame([
-            'index' => 'test',
+            'index'            => 'test',
+            'track_total_hits' => true,
         ], $this->newBuilder()->index('test')->toSearch());
 
         try {
@@ -42,8 +43,9 @@ class BuilderTest extends TestCase
     public function testType()
     {
         $this->assertSame([
-            'index' => 'test',
-            'type'  => 'test',
+            'index'            => 'test',
+            'type'             => 'test',
+            'track_total_hits' => true,
         ], $this->newBuilder()
             ->index('test')
             ->type('test')->toSearch());
